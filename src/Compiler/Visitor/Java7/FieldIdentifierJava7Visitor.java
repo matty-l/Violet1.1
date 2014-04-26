@@ -3,6 +3,7 @@ package Compiler.Visitor.Java7;
 import Compiler.AbstractSyntaxTree.RawSyntaxTree;
 import Compiler.AbstractSyntaxTree.Util.ScopeTable;
 import Compiler.Nodes.ASTNode;
+import Compiler.Nodes.ASTNodeTypeJava7;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 import java.util.ArrayList;
 
@@ -124,38 +125,11 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return new ArrayList<String>(){{add(node.getChildren().get(1).treeNode.getValue());}};
     }
 
-    /** Go through methods and add matches here **/
-
     @Override
     public Object visitNewScopeMemberDecl(ASTNode node){
-        scopes.incept();
-        for (ASTNode child : node.getChildren())
-            child.accept(this);
-        scopes.wakeUp();
-        return null;
+        return scopeStatementSubroutine(node);
     }
 
-
-/*    @Override
-    public Object visitReferenceType(ASTNode node){
-        return null;
-    }*/
-
-    @Override
-    public Object visitMethodDeclaratorRest(ASTNode node){
-        for (ASTNode child : node.getChildren()){
-            child.accept(this);
-        }
-        return null;
-    }
-
-    @Override
-    public Object visitFormalParameters(ASTNode node){
-        for (ASTNode child : node.getChildren()){
-            child.accept(this);
-        }
-        return null;
-    }
 
     @Override
     public Object visitFormalParameterDecls(ASTNode node){
@@ -213,6 +187,17 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
     public Object visitPrimary(ASTNode node){
         //grab relevant values
         ASTNode posId = node.getChildren().get(0);
+        if (node.getNumChildren() == 1 ) handleVariablePrimaries(posId);
+        else if (node.getNumChildren() == 2) handleDispatchPrimaries(posId);
+
+        //pass the buck
+        for (ASTNode child : node.getChildren()) child.accept(this);
+
+        return node.getChildren().get(0).accept(this);
+    }
+
+    /** Handles variable-primaries */
+    private void handleVariablePrimaries(ASTNode posId){
         if (posId.getChildren().size() > 0){
             int level = scopes.indexOf(
                     posId.getChildren().get(0).treeNode.getValue());
@@ -220,20 +205,16 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
             if ( level == 1){
                 fieldNodes.add(posId.treeNode);
             }else if (level == -1 && posId.getChildren().get(0).nodeType.toString().equals("ID")){
-
                 ASTNode badNode = posId.getChildren().get(0);
                 addOutcome(badNode.getAssociatedLineNum(), "Undeclared variable " +
                         badNode.treeNode.getValue() + " at lne " +
                         badNode.getAssociatedLineNum());
             }
         }
+    }
 
-        //pass the buck
-        for (ASTNode child : node.getChildren()){
-            child.accept(this);
-        }
-
-        return node.getChildren().get(0).accept(this);
+    /** Handles dispatch primaries **/
+    private void handleDispatchPrimaries(ASTNode posId){
     }
 
     @Override

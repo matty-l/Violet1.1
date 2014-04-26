@@ -32,7 +32,7 @@ public class DesktopController {
     private final PreferenceManager preferences;
     private long lastTime = 0;
     /** The number of seconds in between background delay **/
-    private long num_delay_seconds = 1;
+    private long num_delay_seconds_tenths = 5;
     /** The preference window **/
     private final SettingsDialog settingsDialog;
 
@@ -81,7 +81,7 @@ public class DesktopController {
             @Override
             public void handle(long now){
                 //every few seconds, force the parser to run on the grammar
-                if ((now - lastTime)/num_delay_seconds >= 1000000000){
+                if ((now - lastTime)/ num_delay_seconds_tenths >= 100000000){
                     lastTime = now;
                     window.forceUpdateText();
                 }
@@ -252,6 +252,6 @@ public class DesktopController {
     /** Sets the minmum delay for the background refresh items
      * @param delay the minimum delay
      */
-    public final void setBackgroundDelay(long delay){ num_delay_seconds = delay;}
+    public final void setBackgroundDelay(long delay){ num_delay_seconds_tenths = delay;}
 
 }

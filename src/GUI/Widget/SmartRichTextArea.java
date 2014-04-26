@@ -18,8 +18,6 @@ import Compiler.Visitor.Visitor;
 import Compiler.Visitor.VisitorToken;
 import GUI.Util.SearchManager;
 import GUI.Util.SearchToken;
-import javafx.event.EventHandler;
-import javafx.scene.input.KeyEvent;
 
 import java.util.*;
 
@@ -48,14 +46,6 @@ public final class SmartRichTextArea extends RichTextArea {
         isSaved = foundField = foundSearch = true;
         //default grammar is Java
         setGrammar(JavaGrammar.getJavaGrammar());
-
-        setOnKeyPressed(keyEvent -> {
-             if (keyEvent.isControlDown() && lastTree != null){
-                 System.out.println("RUNNING");
-                     RefactorVisitor refactorVisitor = new RefactorVisitor(lastTree);
-                     refactorVisitor.setBaseToken(new LexerToken(LexerToken.TokenIds.ID,"XY"));
-             }
-        });
     }
 
     /** Returns true if the token is a field
@@ -85,12 +75,15 @@ public final class SmartRichTextArea extends RichTextArea {
 
         if (isRefactored(token)){
             int indexOfReplacement = getText().indexOf(token.getValue(),index);
-            if (indexOfReplacement+token.getValue().length() < getText().length()) {
-                try{
+
+            if (indexOfReplacement+token.getValue().length() < getText().length() &&
+                    indexOfReplacement+token.getValue().length() > 0 &&
+                    indexOfReplacement > 0 && getText().substring(
+                    index,index+token.getValue().length()).equals(token.getValue())) {
+
                 replaceText(indexOfReplacement,
                         (indexOfReplacement + token.getValue().length()),
                         replaceText);
-                }catch (IndexOutOfBoundsException i){}
             }
             return "";
         }

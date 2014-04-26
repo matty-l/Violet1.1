@@ -3,11 +3,13 @@ package Compiler.Visitor.Java7;
 import Compiler.AbstractSyntaxTree.RawSyntaxTree;
 import Compiler.AbstractSyntaxTree.Util.ScopeTable;
 import Compiler.Nodes.ASTNode;
+import Compiler.Nodes.ASTNodeTypeJava7;
 import Compiler.Parser.CFG.CFGToken;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 import Compiler.Scanner.LexerToken;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -18,15 +20,17 @@ import java.util.HashSet;
 public class RefactorVisitor extends Java7Visitor {
 
     private HashSet<ParserTreeNode> refactorTokens = new HashSet<>();
+    private HashMap<String,ASTNode> fields = new HashMap<>();
     private CFGToken base;
     private static final ASTNode NULLNODE = new ASTNode("null",null);
     private ASTNode baseASTNode = NULLNODE;
     private final RawSyntaxTree parseTree;
-    int recurssion = 0;
+    int recursion = 0;
     private final ScopeTable scopes = new ScopeTable();
 
     public RefactorVisitor(RawSyntaxTree tree){
         parseTree = tree;
+        tree.print();
     }
 
     /** Returns the refactor tokens
@@ -42,109 +46,36 @@ public class RefactorVisitor extends Java7Visitor {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public ArrayList<String> visitCompilationUnit(ASTNode node){
-        ArrayList<String> fields = new ArrayList<>();
-        for (ASTNode child : node.getChildren()){
-            Object o = child.accept(this);
-            if (o instanceof ArrayList)
-                fields.addAll((ArrayList<String>) child.accept(this));
-        }
-        return fields;
+    public Object visitTypeDeclaration(ASTNode node){
+        return scopeStatementSubroutine(node);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public ArrayList<String> visitTypeDeclaration(ASTNode node){
-        ArrayList<String> fields = new ArrayList<>();
-        scopes.incept();
-
-        for (ASTNode child : node.getChildren()){
-            Object o = child.accept(this);
-            if (o instanceof ArrayList)
-                fields.addAll((ArrayList<String>) o);
-        }
-
-        scopes.wakeUp();
-        return fields;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
     public ArrayList<String> visitClassDeclaration(ASTNode node){
-        ArrayList<String> fields = new ArrayList<>();
-
-        fields.addAll((ArrayList<String>)
-                node.getChildren().get(node.getNumChildren() - 1).accept(this));
-        return fields;
+        node.getChildren().get(node.getNumChildren() - 1).accept(this);
+        return null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public ArrayList<String> visitNormalClassDeclaration(ASTNode node){
-        ArrayList<String> fields = new ArrayList<>();
-        for ( int i = 0; i < node.getNumChildren(); i++){
-            Object o = node.getChildren().get(i).accept(this);
-            if (o instanceof ArrayList)
-                fields.addAll((ArrayList)o);
-        }
-        return fields;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public ArrayList<String> visitMemberDecl(ASTNode node){
-        ArrayList<String> fields = new ArrayList<>();
-        for (ASTNode child : node.getChildren()){
-            Object o = child.accept(this);
-            if (o instanceof ArrayList) fields.addAll((ArrayList)o);
-        }
-        return fields;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public ArrayList<String> visitEnumDeclaration(ASTNode node){
-        ArrayList<String> fields = new ArrayList<>();
-
-        for (ASTNode child : node.getChildren()){
-            Object o = child.accept(this);
-            if (o instanceof ArrayList)
-                fields.addAll((ArrayList<String>) child.accept(this));
-        }
-        return fields;
-    }
-
-    /** Grab the field names here **/
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public ArrayList<String> visitFieldDecl(ASTNode node){
+    public Object visitFieldDecl(ASTNode node){
         CFGToken token = node.getChildren().get(1).getChildren().get(
                 0).treeNode.value.getEnd_chartRow().getCFGToken();
+        fields.put(token.getValue(),node);
+
         //add to refactor list
         if (base.getValue().equals(token.getValue()) &&
                 base.getColNum()==token.getColNum() && base.getLineNum()==token.getLineNum()) {
             baseASTNode = node;
-            if (recurssion == 0) {
-                recurssion++;
+            if (recursion == 0) {
+                recursion++;
                 parseTree.getRoot().accept(this);
                 return null;
             }
         }
         //add to the class scope
-        String name = node.getChildren().get(1).getChildren().get(0).treeNode.getValue();
-
-        if (scopes.indexOf(name) == 1){
-            int linenum = node.getChildren().get(1).getChildren().get(0
-            ).treeNode.value.getEnd_chartRow().getCFGToken().getLineNum();
-            addOutcome(linenum,"Duplicate field declaration of " +
-                    name + " at line "+linenum);
-        }
         scopes.add(node.getChildren().get(1).getChildren().get(0).treeNode.getValue(), node);
 
-        //FIXME: wasteful data structures are being used
-        return new ArrayList<String>(){{add(node.getChildren().get(1).treeNode.getValue());}};
+        return null;
     }
 
     /** Go through methods and add matches here **/
@@ -152,33 +83,31 @@ public class RefactorVisitor extends Java7Visitor {
     @Override
     public Object visitNewScopeMemberDecl(ASTNode node){
         scopes.incept();
-        for (ASTNode child : node.getChildren())
+
+        //handle method refactorizations
+        for (ASTNode child : node.getChildren()){
+            if (child.nodeType.equals(ASTNodeTypeJava7.Identifier)){
+                ParserTreeNode treeNode = child.treeNode;
+                CFGToken token = treeNode.value.getEnd_chartRow().getCFGToken();
+                if (base.getValue().equals(token.getValue()) &&
+                        base.getColNum()==token.getColNum() && base.getLineNum()==token.getLineNum()) {
+                    baseASTNode = child;
+
+                    boolean isRefactorable = nodesAreEqual((ASTNode) scopes.get(
+                            token.getValue()), baseASTNode);
+                    if (isRefactorable){
+                        refactorTokens.add(child.treeNode);
+                    }
+
+                }
+            }
             child.accept(this);
+        }
+
         scopes.wakeUp();
         return null;
     }
 
-
-/*    @Override
-    public Object visitReferenceType(ASTNode node){
-        return null;
-    }*/
-
-    @Override
-    public Object visitMethodDeclaratorRest(ASTNode node){
-        for (ASTNode child : node.getChildren()){
-            child.accept(this);
-        }
-        return null;
-    }
-
-    @Override
-    public Object visitFormalParameters(ASTNode node){
-        for (ASTNode child : node.getChildren()){
-            child.accept(this);
-        }
-        return null;
-    }
 
     @Override
     public Object visitFormalParameterDecls(ASTNode node){
@@ -196,13 +125,14 @@ public class RefactorVisitor extends Java7Visitor {
         if (base.getValue().equals(token.getValue()) &&
                 base.getColNum()==token.getColNum() && base.getLineNum()==token.getLineNum()) {
             baseASTNode = node;
-            if (recurssion == 0) {
-                recurssion++;
+            if (recursion == 0) {
+                recursion++;
                 parseTree.getRoot().accept(this);
                 return null;
             }
 
-            boolean isRefactorable = baseASTNode.equals(scopes.get(token.getValue()));
+            boolean isRefactorable = nodesAreEqual((ASTNode) scopes.get(token.getValue()),
+                    baseASTNode);
             if (isRefactorable){
                 refactorTokens.add(treeNode.treeNode);
             }
@@ -227,26 +157,31 @@ public class RefactorVisitor extends Java7Visitor {
             //check if we found a variable after a "this" token
             if (mark == 1 && o != null){
                 ASTNode idNode = (ASTNode) ((ASTNode)o).accept(this);
+
                 CFGToken token = idNode.treeNode.value.getEnd_chartRow().getCFGToken();
 
                 if (base.getValue().equals(token.getValue()) &&
-                        base.getColNum()==token.getColNum() && base.getLineNum()==token.getLineNum()) {
-                    baseASTNode = (ASTNode) scopes.get(base.getValue());
-                    System.out.println("Defining in expr3");
-                    if (recurssion == 0) {
-                        recurssion++;
+                        base.getColNum()==token.getColNum() &&
+                        base.getLineNum() == token.getLineNum()) {
+                    if (fields.containsKey(token.getValue()))
+                        baseASTNode = fields.get(token.getValue());
+                    else{
+                        addOutcome(token.getLineNum(),"Cannot find field referenced by \"this\"");
+                    }
+
+                    if (recursion == 0) {
+                        recursion++;
                         parseTree.getRoot().accept(this);
                         return null;
                     }
                 }
 
-                boolean isRefactorable = baseASTNode.equals(scopes.get(idNode.treeNode.getValue()));
+                boolean isRefactorable = nodesAreEqual(baseASTNode,
+                        fields.get(token.getValue()));
+
                 if (isRefactorable){
                     refactorTokens.add(idNode.treeNode);
                 }
-
-                /* scopes.isInScope(idNode.treeNode.getValue(),
-                        scopes.indexOf(baseASTNode.getValue()));*/
 
             }
             //look for "this" tokens
@@ -264,12 +199,12 @@ public class RefactorVisitor extends Java7Visitor {
         if (posId.getChildren().size() > 0){
             CFGToken token = posId.treeNode.value.getEnd_chartRow().getCFGToken();
 
-            if (base.getValue().equals(token.getValue()) &&
+            if (baseASTNode == null && base.getValue().equals(token.getValue()) &&
                     base.getColNum()==token.getColNum() && base.getLineNum()==token.getLineNum()) {
                 baseASTNode = (ASTNode) scopes.get(base.getValue());
-                System.out.println("Defining in primary");
-                if (recurssion == 0) {
-                    recurssion++;
+
+                if (recursion == 0) {
+                    recursion++;
                     parseTree.getRoot().accept(this);
                     return null;
                 }
@@ -277,8 +212,8 @@ public class RefactorVisitor extends Java7Visitor {
 
             if (base.getValue().equals(token.getValue()) &&
                     base.getColNum()==token.getColNum() && base.getLineNum()==token.getLineNum()) {
-                if (recurssion == 0) {
-                    recurssion++;
+                if (recursion == 0) {
+                    recursion++;
                     parseTree.getRoot().accept(this);
                 }
                 return null;
@@ -286,7 +221,6 @@ public class RefactorVisitor extends Java7Visitor {
 
             boolean refactorable = nodesAreEqual((ASTNode) scopes.get(
                     posId.getChildren().get(0).treeNode.getValue()), baseASTNode);
-
             if ( refactorable ){
                 refactorTokens.add(posId.treeNode);
             }

@@ -141,7 +141,7 @@ public class GuiWindow{
     /** Adds a text editor to the GUI **/
     private void buildTextArea(){
         textArea = new SmartRichTextArea();
-        textArea.setOnMouseClicked(event -> { finderDialog.hide();  });
+        textArea.setOnMouseClicked(event -> { finderDialog.hide(); refactorDialog.hide();  });
         enableRefactoring(textArea);
         BorderPane centerFrame = new BorderPane();
         TabPane mainFrame = new TabPane();
@@ -330,13 +330,14 @@ public class GuiWindow{
     /** Sets whether the current text is saved
      * @param saved whether the current text is saved
      */
-    public void setSaved(boolean saved){((SmartRichTextArea)textArea).setSaved(saved);}
+    public void setSaved(boolean saved){
+        textArea.setSaved(saved);}
 
     /** Clears the window; prompts if window is unsaved. Returns success. **/
     public void clear(){
         if (textArea.getText().equals("")) return;
         //prompt if unsaved
-        if (!((SmartRichTextArea)textArea).isSaved()){
+        if (!textArea.isSaved()){
 
             //FIXME: use UtilWindow abstract
             final Stage dialogStage = new Stage();
@@ -349,7 +350,7 @@ public class GuiWindow{
             pane.setRight(canc);
             cont.setOnAction(actionEvent -> {
                 textArea.clear();
-                ((SmartRichTextArea) textArea).setSaved(false);
+                textArea.setSaved(false);
                 dialogStage.close();
             });
             canc.setOnAction(actionEvent -> {
@@ -363,7 +364,7 @@ public class GuiWindow{
             dialogStage.showAndWait();
         }else{
             textArea.clear();
-            ((SmartRichTextArea)textArea).setSaved(false);
+            textArea.setSaved(false);
         }
     }
 
@@ -376,6 +377,7 @@ public class GuiWindow{
 
         //add text area
         SmartRichTextArea newTextArea = new SmartRichTextArea();
+        enableRefactoring(newTextArea);
         newTextArea.addToTab(tab);
 
         configureTab(tab, newTextArea);
@@ -588,6 +590,7 @@ public class GuiWindow{
                                 textArea.replaceSelectionRefactor(refactorVisitor.getRefactorTokens(),
                                         refactorDialog.getOutput().get());
                                 refactorDialog.hide();
+                                textArea.updateFormatting();
 
                             }
                         });
