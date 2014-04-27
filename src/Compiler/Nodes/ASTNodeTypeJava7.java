@@ -25,8 +25,14 @@ public enum ASTNodeTypeJava7 implements ASTNodeType{
     ClassDeclaration{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitClassDeclaration(node);}},
 
+    ClassOrInterfaceDeclaration{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitClassOrInterfaceDeclaration(node);}},
+
     NormalClassDeclaration{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitNormalClassDeclaration(node);}},
+
+    InterfaceDeclaration{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitInterfaceDeclaration(node);}},
 
     EnumDeclaration{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitEnumDeclaration(node);}},
@@ -67,7 +73,7 @@ public enum ASTNodeTypeJava7 implements ASTNodeType{
     VariableDeclarator{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitVariableDeclarator(node);}},
     VariableDeclaratorId{@Override public Object accept(Visitor v, ASTNode node){
-        return ((Java7Visitor)v).visitVariableDeclarator(node);}},
+        return ((Java7Visitor)v).visitVariableDeclaratorId(node);}},
     ArrayVariableDeclarator{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitArrayVariableDeclarator(node);}},
 
@@ -155,6 +161,16 @@ public enum ASTNodeTypeJava7 implements ASTNodeType{
 
     SwitchLabel{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitSwitchLabel(node);}},
+
+    Type{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitType(node);}},
+
+    DispatchNoReference{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitDispatchNoReference(node);}},
+
+    FINAL{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitTerminal(node);}},
+
 
     // Terminals (could offer each their own visit method, or could remove and just
     //call them "terminal" nodes (all leaves)... not doing either for now)
@@ -250,6 +266,10 @@ public enum ASTNodeTypeJava7 implements ASTNodeType{
         return ((Java7Visitor)v).visitTerminal(node);}},
     VOID{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitTerminal(node);}},
+    EXTENDS{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitTerminal(node);}},
+    IMPLEMENTS{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitTerminal(node);}},
     PRIVATE{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitTerminal(node);}},
     PROTECTED{@Override public Object accept(Visitor v, ASTNode node){
@@ -260,8 +280,8 @@ public enum ASTNodeTypeJava7 implements ASTNodeType{
         return ((Java7Visitor)v).visitTerminal(node);}},
     VOLATILE{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitTerminal(node);}},
-    Type{@Override public Object accept(Visitor v, ASTNode node){
-        return ((Java7Visitor)v).visitType(node);}},
+    SUPER{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitTerminal(node);}},
 
 
 //    LSQBRACE{@Override public Object accept(Visitor v, ASTNode node){

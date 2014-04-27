@@ -578,7 +578,7 @@ public class GuiWindow{
 
                     if (refactorVisitor != null){
                         refactorVisitor.setBaseToken(tokenOfClick);
-                        textArea.getCatalog().addAll(refactorVisitor.getOutcomes());
+                        textArea.getCatalog().addAll(refactorVisitor.popOutcomes());
                         refactorDialog.refactor(textArea.getSelectedText());
                         refactorDialog.show();
                         refactorDialog.focusInput();

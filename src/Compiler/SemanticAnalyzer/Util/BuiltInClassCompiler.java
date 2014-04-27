@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -128,7 +129,8 @@ public final class BuiltInClassCompiler {
 
     /** Internal subroutine for analyzing class information by class name **/
     private static void addClass(String className){
-        if (langClasses.contains(new ClassTreeNode(className, (Class) null))) return;
+        if (langClasses.contains(new ClassTreeNode(className, (Class) null,false)))
+            return;
 
         ClassLoader classLoader = ClassLoader.getSystemClassLoader();
         ClassTreeNode class_ = null;
@@ -136,8 +138,9 @@ public final class BuiltInClassCompiler {
             Class classObject = classLoader.loadClass(className);
             Method[] declaredMethods = classObject.getMethods();
             Field[] declaredFields = classObject.getFields();
+            boolean isFinal = classObject.getModifiers() == Modifier.FINAL;
 
-            class_ = new ClassTreeNode(classObject.getName(),classObject);
+            class_ = new ClassTreeNode(classObject.getName(),classObject,isFinal);
             for (Method m : declaredMethods) class_.addMethod(m);
             for (Field f : declaredFields) class_.addField(f);
             if (classObject.getName().equals("java.lang.Object"))

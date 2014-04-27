@@ -30,7 +30,6 @@ public class RefactorVisitor extends Java7Visitor {
 
     public RefactorVisitor(RawSyntaxTree tree){
         parseTree = tree;
-        tree.print();
     }
 
     /** Returns the refactor tokens
@@ -111,8 +110,12 @@ public class RefactorVisitor extends Java7Visitor {
 
     @Override
     public Object visitFormalParameterDecls(ASTNode node){
-        ASTNode idNode = node.getChildren().get(1);
-        scopes.add(idNode.getChildren().get(0).getChildren().get(0).treeNode.getValue(),idNode);
+
+        ASTNode idNode = node.getChildren().get(node.getNumChildren()-1);
+        if (node.getNumChildren() > 0 && idNode.getChildren().get(0).getNumChildren() > 0)
+            scopes.add(
+                idNode.getChildren().get(0).getChildren().get(0).treeNode.getValue(),idNode);
+
         return null;
     }
 
@@ -121,6 +124,7 @@ public class RefactorVisitor extends Java7Visitor {
         ASTNode treeNode = (ASTNode) node.getChildren().get(0).accept(this);
         //check for duplicate declaration
         CFGToken token = treeNode.treeNode.value.getEnd_chartRow().getCFGToken();
+
         //add to refactor list
         if (base.getValue().equals(token.getValue()) &&
                 base.getColNum()==token.getColNum() && base.getLineNum()==token.getLineNum()) {

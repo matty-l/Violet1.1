@@ -1,5 +1,6 @@
 package Compiler.Visitor.Java7;
 
+import Compiler.SemanticAnalyzer.ClassTree.ClassTree;
 import Compiler.SemanticAnalyzer.RawSyntaxTree;
 import Compiler.SemanticAnalyzer.Util.ScopeTable;
 import Compiler.Nodes.ASTNode;
@@ -22,7 +23,7 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
      * @param tree the AST
      * @return a list of ClassField Nodes
      */
-    public ArrayList<ParserTreeNode> getFields(RawSyntaxTree tree){
+    public ArrayList<ParserTreeNode> getFields(RawSyntaxTree tree, ClassTree classTree){
         scopes = new ScopeTable();
         tree.getRoot().accept(this);
         return fieldNodes;
@@ -132,8 +133,13 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
 
     @Override
     public Object visitFormalParameterDecls(ASTNode node){
-        ASTNode idNode = node.getChildren().get(1);
-        scopes.add(idNode.getChildren().get(0).getChildren().get(0).treeNode.getValue(),idNode);
+        int lastIndex = node.getChildren().size() - 1;
+        if (lastIndex > 0) {
+            ASTNode idNode = node.getChildren().get(lastIndex);
+            scopes.add(idNode.getChildren().get(0)
+                    .getChildren().get(0).treeNode.getValue(),idNode);
+        }
+        
         return null;
     }
 

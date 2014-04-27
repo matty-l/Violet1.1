@@ -1,5 +1,6 @@
 package Compiler.Nodes;
 
+import Compiler.Parser.CFG.CFGToken;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 import Compiler.Visitor.Visitor;
 
@@ -122,6 +123,13 @@ public final class ASTNode {
      */
     public int getAssociatedLineNum(){
         return treeNode.value.getEnd_chartRow().getCFGToken().getLineNum();
+    }
+
+    /** Returns the CFGToken located in the end column of the treenode of this node
+     * @return the CFGToken you're probably looking for
+     */
+    public CFGToken getEnd_ColCFGToken(){
+        return treeNode.value.getEnd_chartRow().getCFGToken();
     }
 
 }

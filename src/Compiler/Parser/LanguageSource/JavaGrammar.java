@@ -54,7 +54,7 @@ public class JavaGrammar {
                         "ImportDeclarationList->ImportDeclaration|" +
                         "ImportDeclarationList->ImportDeclaration ImportDeclarationList|" +
                         "TypeDeclarationList->TypeDeclaration|" +
-                        "TypeDeclaration->TypeDeclarationList|"
+                        "TypeDeclaration->TypeDeclarationList TypeDeclarationList|"
         + "Identifier->ID|"
         //QualifiedIdentifier (Terminals: Identifier, DOT)
         + "QualifiedIdentifier->Identifier|" +
@@ -84,7 +84,8 @@ public class JavaGrammar {
                 "ClassOrInterfaceDeclaration->InterfaceDeclaration|" +
                 "ClassOrInterfaceDeclaration->ModifierList ClassDeclaration|" +
                 "ClassOrInterfaceDeclaration->ModifierList InterfaceDeclaration|" +
-                "ModifierList->Modifier|ModifierList->Modifier ModifierList|"
+                "ModifierList->Modifier|" +
+                "ModifierList->Modifier ModifierList|"
         //ClassDeclaratoin : (Class)
         + "ClassDeclaration->NormalClassDeclaration|" +
                 "ClassDeclaration->EnumDeclaration|"
@@ -233,7 +234,7 @@ public class JavaGrammar {
         //MemberDecl : (VOID)
         + "MemberDecl->NewScopeMemberDecl|" +
                 "MemberDecl->FieldDecl|" +
-                "NewScopeMemberDecl->VOID Identifier VoidMethodDeclaratorRest|" +
+//                "NewScopeMemberDecl->VOID Identifier VoidMethodDeclaratorRest|" +
                 "NewScopeMemberDecl->Identifier ConstructorDeclaratorRest|" +
                 "NewScopeMemberDecl->GenericMethodOrConstructorDecl|" +
                 "NewScopeMemberDecl->ClassDeclaration|" +
@@ -242,6 +243,7 @@ public class JavaGrammar {
 
         //MethodOrFieldDecl
         + "MethodDecl->Type Identifier MethodDeclaratorRest|" +
+                "MethodDecl->VOID Identifier VoidMethodDeclaratorRest|" +
                 "FieldDecl->Type Identifier FieldDeclaratorsRest|"
 /*
         //MethodOrFieldRest
@@ -277,8 +279,9 @@ public class JavaGrammar {
         //GenericMethodOrConstructorDecl
         + "GenericMethodOrConstructorDecl->TypeParameters GenericMethodOrConstructorRest|"
         //GenericMethodOrConstructorRest : (VOID)
-        + "GenericMethodOrConstructorRest->Type Identifier MethodDeclaratorRest|" +
-                "GenericMethodOrConstructorRest->VOID Identifier MethodDeclaratorRest|" +
+//        + "GenericMethodOrConstructorRest->Type Identifier MethodDeclaratorRest|" +
+                //                "GenericMethodOrConstructorRest->VOID Identifier MethodDeclaratorRest|" +
+                + "GenericMethodOrConstructorRest->MethodDecl|" +
                 "GenericMethodOrConstructorRest->Identifier ConstructorDeclaratorRest|"
         //InterfaceBody
         + "InterfaceBody->LBRACE InterfaceBodyAssembly RBRACE|" +
@@ -602,7 +605,7 @@ public class JavaGrammar {
                 "Primary->NonWildcardTypeArguments THIS Arguments|" +
                 "Primary->Identifier|" +
                 "Primary->Identifier PrimaryAssembly1|" +
-                "Primary->Identifier IdentifierSuffix|" +
+                //"Primary->Identifier IdentifierSuffix|" +
                 "Primary->Identifier PrimaryAssembly1 IdentifierSuffix|" +
                 "PrimaryAssembly1->DOT Identifier|" +
                 "PrimaryAssembly1->DOT Identifier PrimaryAssembly1|" +
@@ -610,7 +613,9 @@ public class JavaGrammar {
                 "Primary->BasicType PrimaryAssembly2 DOT CLASS|" +
                 "PrimaryAssembly2->LSQBRACE RSQBRACE|" +
                 "PrimaryAssembly2->LSQBRACE RSQBRACE PrimaryAssembly2|" +
-                "Primary->VOID DOT CLASS|"
+                "Primary->VOID DOT CLASS|" +
+                "Primary->DispatchNoReference|" +
+                "DispatchNoReference->Identifier IdentifierSuffix|"
 
 
         // Literal

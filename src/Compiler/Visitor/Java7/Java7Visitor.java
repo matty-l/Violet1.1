@@ -10,6 +10,7 @@ public abstract class Java7Visitor extends Visitor {
 
     public Object visitQualifiedIdentifierList(ASTNode node){return defaultVisit(node);}
     public Object visitClassDeclaration(ASTNode node){return defaultVisit(node);}
+    public Object visitClassOrInterfaceDeclaration(ASTNode node){return defaultVisit(node);}
     public Object visitNormalClassDeclaration(ASTNode node){return defaultVisit(node);}
     public Object visitEnumDeclaration(ASTNode node){return defaultVisit(node);}
     public Object visitCompilationUnit(ASTNode node){return defaultVisit(node);}
@@ -28,6 +29,7 @@ public abstract class Java7Visitor extends Visitor {
     public Object visitFormalParameterDecls(ASTNode node){return defaultVisit(node);}
     public Object visitVariableModifier(ASTNode node){return defaultVisit(node);}
     public Object visitVariableDeclarator(ASTNode node){return defaultVisit(node);}
+    public Object visitVariableDeclaratorId(ASTNode node) {return defaultVisit(node);}
     public Object visitArrayVariableDeclarator(ASTNode node){return defaultVisit(node);}
     public Object visitVariableInitializer(ASTNode node){return defaultVisit(node);}
     public Object visitStatement(ASTNode node){return defaultVisit(node);}
@@ -59,6 +61,8 @@ public abstract class Java7Visitor extends Visitor {
     public Object visitAssignmentOperator(ASTNode node){return defaultVisit(node);}
     public Object visitSwitchLabel(ASTNode node) {return defaultVisit(node);}
     public Object visitType(ASTNode node) {return defaultVisit(node);}
+    public Object visitDispatchNoReference(ASTNode node) {return defaultVisit(node);}
+    public Object visitInterfaceDeclaration(ASTNode node) {return defaultVisit(node);}
 
     /** Default behavior for the terminals is to return the terminal value as a string
      * @param node the terminal node
@@ -67,6 +71,7 @@ public abstract class Java7Visitor extends Visitor {
     public Object visitTerminal(ASTNode node){
         return node.treeNode.value.getEnd_chartRow().getCFGToken().getValue();
     }
+
 
 
 }

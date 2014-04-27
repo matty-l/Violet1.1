@@ -22,14 +22,27 @@ public abstract class Visitor {
      * to determine if there are any outcomes to handle from the traversal.
      * @return a list of observable outcomes
      */
-    public final ObservableList<VisitorToken> getOutcomes(){return outcomes;}
+    protected final ObservableList<VisitorToken> getOutcomes(){return outcomes;}
+
+    /** See "getOutcomes". This method returns and removes all outcomes from the list
+     * This is the only public way to retrieve the observables to help reduce
+     * the risk of using the same visitor twice but accumulating the results from
+     * the first visit into the second independent traversal.
+     * @return list of observable outcomes.
+     */
+    public final ObservableList<VisitorToken> popOutcomes(){
+        ObservableList<VisitorToken> outcomes =
+                FXCollections.observableArrayList(this.outcomes);
+        this.outcomes.clear();
+        return outcomes;
+    }
 
     /** Used internally (and by subclasses) to add a message to the outcome list
      * @param lineNumber the line number of the outcome
      * @param message the message of the outcome
      */
     protected final void addOutcome(int lineNumber, String message){
-        outcomes.add(new VisitorToken(lineNumber,message));
+        outcomes.add(new VisitorToken(lineNumber, message));
     }
 
     public final Object visit(ASTNode node){return node.accept(this);}

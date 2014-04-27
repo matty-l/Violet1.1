@@ -36,16 +36,19 @@ public class ClassTreeNode {
     private final ASTNode definition_node;
     /** The definitional Class, if the class is built-in and is accessible. */
     private final Class definition_class;
+    /** True if the class is final **/
+    private final boolean isFinal;
 
 
     /** Constructs a new ClassTreeNode
      * @param name the name of the node
      * @param tree the definitional ASTNode
      */
-    public ClassTreeNode(String name, ASTNode tree){
+    public ClassTreeNode(final String name, final ASTNode tree, final boolean isFinal){
         this.name = name;
         this.definition_node = tree;
         definition_class = null;
+        this.isFinal = isFinal;
     }
 
     /**
@@ -53,10 +56,11 @@ public class ClassTreeNode {
      * @param name the name of the node
      * @param class_ the definitional Class object
      */
-    public ClassTreeNode(String name, Class class_){
+    public ClassTreeNode(final String name, final Class class_, final boolean isFinal){
         this.name = name;
         this.definition_node = null;
         this.definition_class = class_;
+        this.isFinal = isFinal;
     }
 
     /** Sets the parent of this class to the given Class
@@ -123,8 +127,8 @@ public class ClassTreeNode {
      * @param name the name of the method to return
      * @return the method object
      */
-    public boolean containsMethod(final String name, final String type, final String[]... formals){
-        return methods.contains(new ClassMethod(name, type, formals));
+    public boolean containsMethod(final String name, final String[]... formals){
+        return methods.contains(new ClassMethod(name, "", formals));
     }
 
     /** Returns true if the field is contained in the class
@@ -139,14 +143,15 @@ public class ClassTreeNode {
      * @param args unused
      */
     public static void main(String[] args){
-        ClassTreeNode node = new ClassTreeNode("Object", (ASTNode) null);
+        ClassTreeNode node = new ClassTreeNode("Object", (ASTNode) null,false);
         String[][] formals = {{"int","myInt"},{"Object","obj"}};
+        String[][] formals2 = {{"",""},{"",""}};
         node.addMethod("foo","int",formals);
         node.addMethod("bar","Object",formals);
         node.addField("field1","int");
 
-        System.out.println("True: "+node.containsMethod("foo","int",formals));
-        System.out.println("True: "+node.containsField("field1","int"));
+        System.out.println("True: "+node.containsMethod("foo",formals2));
+        System.out.println("True: "+node.containsField("field1", "int"));
     }
 
     /** Two classes are equivalent if they have the same name
@@ -221,5 +226,17 @@ public class ClassTreeNode {
             descendants.add(curNode);
         }
         return descendants;
+    }
+
+    /** Returns true if the class is final
+     * @return true if final
+     */
+    public boolean isFinal() { return isFinal;  }
+
+    /** Prints out all methods of this class **/
+    public void printMethods() {
+        for (ClassMethod m : methods){
+            System.out.println(m);
+        }
     }
 }

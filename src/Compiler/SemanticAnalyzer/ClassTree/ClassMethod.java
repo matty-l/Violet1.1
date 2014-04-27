@@ -27,7 +27,8 @@ public class ClassMethod {
         }
     }
 
-    /** Checks equivalence by name, formals, and return type
+    /** Checks equivalence by name, formals, and return type. This does not
+     * allow for overloading (fixme).
      * @param o the object to check if equivalent
      * @return true if equivalent
      */
@@ -38,8 +39,7 @@ public class ClassMethod {
 
         ClassMethod oMethod = (ClassMethod) o;
 
-        return name.equals(oMethod.name) && parameters.equals(oMethod.parameters) &&
-                returnType.equals(oMethod.returnType);
+        return name.equals(oMethod.name) && parameters.size() == (oMethod.parameters.size());
 
     }
 
@@ -48,10 +48,23 @@ public class ClassMethod {
      */
     @Override
     public int hashCode() {
-        int result = returnType.hashCode();
-        result = 31 * result + parameters.hashCode();
+        int result = parameters.size();
         result = 31 * result + name.hashCode();
         return result;
+    }
+
+
+    /** Returns a useful string representation of the method
+     * @return string representation
+     */
+    @Override public String toString(){
+        StringBuilder params = new StringBuilder("[");
+        for (ClassFormal param : parameters){
+            params.append("(").append(param.getType()).append(", ");
+            params.append(param.getName()).append(")");
+        }
+        params.append("]");
+        return "{"+name+" | "+returnType + " | " + params + "}";
     }
 
 }
