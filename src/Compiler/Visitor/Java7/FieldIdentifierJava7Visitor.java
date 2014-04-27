@@ -1,9 +1,8 @@
 package Compiler.Visitor.Java7;
 
-import Compiler.AbstractSyntaxTree.RawSyntaxTree;
-import Compiler.AbstractSyntaxTree.Util.ScopeTable;
+import Compiler.SemanticAnalyzer.RawSyntaxTree;
+import Compiler.SemanticAnalyzer.Util.ScopeTable;
 import Compiler.Nodes.ASTNode;
-import Compiler.Nodes.ASTNodeTypeJava7;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 import java.util.ArrayList;
 
@@ -19,9 +18,9 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
     private ScopeTable scopes;
     private ArrayList<ParserTreeNode> fieldNodes = new ArrayList<>();
 
-    /** Returns a list of Field Nodes from an AST
+    /** Returns a list of ClassField Nodes from an AST
      * @param tree the AST
-     * @return a list of Field Nodes
+     * @return a list of ClassField Nodes
      */
     public ArrayList<ParserTreeNode> getFields(RawSyntaxTree tree){
         scopes = new ScopeTable();
@@ -169,7 +168,7 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
                 boolean isField = scopes.isInScope(idNode.treeNode.getValue(),1);
                 if (level == -1){
                     addOutcome(idNode.getAssociatedLineNum(),
-                            "Field lookup failed for "+idNode.treeNode.getValue()
+                            "ClassField lookup failed for "+idNode.treeNode.getValue()
                             + " at line " + idNode.getAssociatedLineNum());
                 }else if (isField){
                     fieldNodes.add(idNode.treeNode);

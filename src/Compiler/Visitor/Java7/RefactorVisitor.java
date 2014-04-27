@@ -1,7 +1,7 @@
 package Compiler.Visitor.Java7;
 
-import Compiler.AbstractSyntaxTree.RawSyntaxTree;
-import Compiler.AbstractSyntaxTree.Util.ScopeTable;
+import Compiler.SemanticAnalyzer.RawSyntaxTree;
+import Compiler.SemanticAnalyzer.Util.ScopeTable;
 import Compiler.Nodes.ASTNode;
 import Compiler.Nodes.ASTNodeTypeJava7;
 import Compiler.Parser.CFG.CFGToken;

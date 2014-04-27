@@ -1,6 +1,7 @@
 package GUI.Widget;
 
-import Compiler.AbstractSyntaxTree.RawSyntaxTree;
+import Compiler.SemanticAnalyzer.ClassTree.ClassTree;
+import Compiler.SemanticAnalyzer.RawSyntaxTree;
 import Compiler.Nodes.ASTNodeTypeBantam;
 import Compiler.Nodes.ASTNodeTypeJava7;
 import Compiler.Parser.Builder.ASTBuilder;
@@ -13,8 +14,9 @@ import Compiler.Parser.ParserTree.ParserTreeNode;
 import Compiler.Scanner.LexerToken;
 import Compiler.Visitor.Bantam.FieldIdentifierBantamVisitor;
 import Compiler.Visitor.Java7.FieldIdentifierJava7Visitor;
+import Compiler.Visitor.Java7.ImportVisitor;
+import Compiler.Visitor.Java7.MethodIdentifierJava7Visitor;
 import Compiler.Visitor.Java7.RefactorVisitor;
-import Compiler.Visitor.Visitor;
 import Compiler.Visitor.VisitorToken;
 import GUI.Util.SearchManager;
 import GUI.Util.SearchToken;
@@ -171,20 +173,24 @@ public final class SmartRichTextArea extends RichTextArea {
         lastTree = new RawSyntaxTree(buidler.getTreeHead(),type);
 
         //FIXME: make more elegant
-        Visitor v = null;
         if (getGrammar().equals(BantamGrammarSource.getBantamGrammar())) {
             FieldIdentifierBantamVisitor visitor = new FieldIdentifierBantamVisitor();
             fieldNodes = visitor.getFields(lastTree);
-            v = visitor;
+            if (visitor.getOutcomes().size() > 0){
+                getCatalog().addAll(visitor.getOutcomes());
+            }
         }
         if (getGrammar().equals(JavaGrammar.getJavaGrammar())) {
+            ClassTree classTree = new ClassTree(lastTree);
+
             FieldIdentifierJava7Visitor visitor = new FieldIdentifierJava7Visitor();
+            MethodIdentifierJava7Visitor methodVisitor = new MethodIdentifierJava7Visitor();
+            methodVisitor.getMethods(lastTree, classTree);
             fieldNodes = visitor.getFields(lastTree);
-            v = visitor;
+            getCatalog().addAll(visitor.getOutcomes());
+            getCatalog().addAll(methodVisitor.getOutcomes());
         }
-        if (v != null && v.getOutcomes().size() > 0){
-            getCatalog().addAll(v.getOutcomes());
-        }
+
 
     }
 
@@ -196,6 +202,7 @@ public final class SmartRichTextArea extends RichTextArea {
     }
 
     @Override protected void handleScannedTokens(){
+        markSubroutineIncomplete();
         ASTBuilder builder = new ASTBuilder();
 
         if (threadNet) {
@@ -214,9 +221,12 @@ public final class SmartRichTextArea extends RichTextArea {
                                     m.getBadToken().getLineNum() + " in column "
                                     + m.getBadToken().getColNum()));
                 }
+                markSubroutineComplete();
                 threadNet = true;
             }).start();
-        }else return;
+        }else {
+            return;
+        }
 
         //Updates messages - FIXME add them all or more of them or something
 

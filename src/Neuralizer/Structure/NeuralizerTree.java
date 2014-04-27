@@ -1,6 +1,6 @@
 package Neuralizer.Structure;
 
-import Compiler.AbstractSyntaxTree.RawSyntaxTree;
+import Compiler.SemanticAnalyzer.RawSyntaxTree;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 import Neuralizer.Util.TreeFlattenVisitor;
 

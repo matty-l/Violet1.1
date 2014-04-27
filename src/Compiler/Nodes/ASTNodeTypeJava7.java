@@ -260,6 +260,8 @@ public enum ASTNodeTypeJava7 implements ASTNodeType{
         return ((Java7Visitor)v).visitTerminal(node);}},
     VOLATILE{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitTerminal(node);}},
+    Type{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitType(node);}},
 
 
 //    LSQBRACE{@Override public Object accept(Visitor v, ASTNode node){

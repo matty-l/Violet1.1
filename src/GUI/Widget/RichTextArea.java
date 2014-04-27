@@ -39,6 +39,7 @@ public abstract class RichTextArea extends TextArea {
     private boolean toggleTextValidator;
     private boolean toggleSelectionValidator;
     private boolean updated = false;
+    private boolean subroutineComplete = true;
 
     //for handling errors
     private int lineOfBadToken = -1;
@@ -314,9 +315,23 @@ public abstract class RichTextArea extends TextArea {
         linkAreasSubroutine();
     }
 
+    /** Marks the area as not updated. Must be called by routines
+     * to signal that handleScannedTokens be reprocessed, or else
+     * handleScannedTokens will never execute
+    **/
+    protected final void markSubroutineComplete(){subroutineComplete = true;}
+
+    /** Marks the area as updated. Must be called by routines
+     * to signal that handleScannedTokens not be processed, usually if
+     * the processing is still ongoing and overlap with separate threads
+     * is unwelcome.
+     **/
+    protected final void markSubroutineIncomplete(){subroutineComplete = false;}
+
+
     /** Forces the area to update itself with all supplementary functionalities **/
     public final void forceUpdate(){
-        if (!updated)
+        if (!updated && subroutineComplete)
             handleScannedTokens();
         updated = true;
     }

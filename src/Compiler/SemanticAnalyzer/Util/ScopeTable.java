@@ -1,4 +1,4 @@
-package Compiler.AbstractSyntaxTree.Util;
+package Compiler.SemanticAnalyzer.Util;
 
 import Compiler.Nodes.ASTNode;
 

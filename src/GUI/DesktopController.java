@@ -32,7 +32,7 @@ public class DesktopController {
     private final PreferenceManager preferences;
     private long lastTime = 0;
     /** The number of seconds in between background delay **/
-    private long num_delay_seconds_tenths = 5;
+    private long num_delay_seconds_tenths = 15;
     /** The preference window **/
     private final SettingsDialog settingsDialog;
 

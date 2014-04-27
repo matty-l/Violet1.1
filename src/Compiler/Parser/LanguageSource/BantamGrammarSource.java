@@ -31,25 +31,25 @@ public final class BantamGrammarSource{
                 "Class->CLASS IDStmt LBRACE RBRACE|"+
                 "Class->CLASS IDStmt EXTENDS IDStmt LBRACE RBRACE";
         String member = "MemberListNode->MemberList|" +
-                        "MemberListNode->Field|" +
-                        "MemberList->MemberListNode Field|"+
-                        "MemberListNode->Method|" +
-                        "MemberList->MemberListNode Method";
-        String method = "Method->IDStmt LPAREN RPAREN LBRACE RBRACE|"+
-                "Method->IDStmt IDStmt LPAREN RPAREN LBRACE RBRACE|"+
-                "Method->IDStmt LPAREN FormalList RPAREN LBRACE RBRACE|"+
-                "Method->IDStmt IDStmt LPAREN FormalList RPAREN LBRACE RBRACE|"+
-                "Method->IDStmt LPAREN FormalList RPAREN LBRACE Stmt RBRACE|"+
-                "Method->IDStmt IDStmt LPAREN FormalList RPAREN LBRACE Stmt RBRACE|"+
-                "Method->IDStmt LPAREN RPAREN LBRACE Stmt RBRACE|"+
-                "Method->IDStmt IDStmt LPAREN RPAREN LBRACE Stmt RBRACE";
-        String field = "Field->IDStmt IDStmt SEMI|" +
-                "Field->IDStmt LSQBRACE RSQBRACE IDStmt SEMI|" +
-                "Field->IDStmt IDStmt ASSIGN Expr SEMI|"+
-                "Field->IDStmt LSQBRACE RSQBRACE IDStmt ASSIGN Expr SEMI";
-        String formal = "FormalList->Formal|FormalList->Formal COMMA FormalList|" +
-                "Formal->IDStmt IDStmt|"+
-                "Formal->IDStmt LSQBRACE RSQBRACE IDStmt";
+                        "MemberListNode->ClassField|" +
+                        "MemberList->MemberListNode ClassField|"+
+                        "MemberListNode->ClassMethod|" +
+                        "MemberList->MemberListNode ClassMethod";
+        String method = "ClassMethod->IDStmt LPAREN RPAREN LBRACE RBRACE|"+
+                "ClassMethod->IDStmt IDStmt LPAREN RPAREN LBRACE RBRACE|"+
+                "ClassMethod->IDStmt LPAREN FormalList RPAREN LBRACE RBRACE|"+
+                "ClassMethod->IDStmt IDStmt LPAREN FormalList RPAREN LBRACE RBRACE|"+
+                "ClassMethod->IDStmt LPAREN FormalList RPAREN LBRACE Stmt RBRACE|"+
+                "ClassMethod->IDStmt IDStmt LPAREN FormalList RPAREN LBRACE Stmt RBRACE|"+
+                "ClassMethod->IDStmt LPAREN RPAREN LBRACE Stmt RBRACE|"+
+                "ClassMethod->IDStmt IDStmt LPAREN RPAREN LBRACE Stmt RBRACE";
+        String field = "ClassField->IDStmt IDStmt SEMI|" +
+                "ClassField->IDStmt LSQBRACE RSQBRACE IDStmt SEMI|" +
+                "ClassField->IDStmt IDStmt ASSIGN Expr SEMI|"+
+                "ClassField->IDStmt LSQBRACE RSQBRACE IDStmt ASSIGN Expr SEMI";
+        String formal = "FormalList->ClassFormal|FormalList->ClassFormal COMMA FormalList|" +
+                "ClassFormal->IDStmt IDStmt|"+
+                "ClassFormal->IDStmt LSQBRACE RSQBRACE IDStmt";
         String stmt = "Stmt->Stmt Stmt|"+
                 "Stmt->ExprStmt|"+"Stmt->DeclStmt|"+"Stmt->IfStmt|"+
                 "Stmt->WhileStmt|"+"Stmt->ForStmt|"+"Stmt->BreakStmt|"+"Stmt->ReturnStmt|"+

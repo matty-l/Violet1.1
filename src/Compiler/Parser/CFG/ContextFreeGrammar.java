@@ -234,7 +234,7 @@ public class ContextFreeGrammar {
      * @param args command line input
      */
     public static void main(String[] args){
-        //Epsilon: String constructor = "MemberList->Field MemberList|MemberList-> |Field->INT_CONST";
+        //Epsilon: String constructor = "MemberList->ClassField MemberList|MemberList-> |ClassField->INT_CONST";
         //example of malformed CFG (validate will catch)
         String constructor = "A->B|B->C|C->D|D->E|E->F|F->G|H->I|I->J|J->K";
         ContextFreeGrammar contextFreeGrammar = new ContextFreeGrammar(constructor);

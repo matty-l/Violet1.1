@@ -1,12 +1,10 @@
 package Compiler.Visitor.Bantam;
 
 import Compiler.Nodes.ASTNode;
-import Compiler.AbstractSyntaxTree.RawSyntaxTree;
-import Compiler.AbstractSyntaxTree.Util.ScopeTable;
+import Compiler.SemanticAnalyzer.RawSyntaxTree;
+import Compiler.SemanticAnalyzer.Util.ScopeTable;
 import Compiler.Parser.CFG.CFGToken;
 import Compiler.Parser.ParserTree.ParserTreeNode;
-import Compiler.Visitor.Bantam.BantamVisitor;
-import GUI.Widget.RichTextArea;
 
 import java.util.ArrayList;
 
@@ -20,9 +18,9 @@ public class FieldIdentifierBantamVisitor extends BantamVisitor {
     private ASTNode curClass;
     private ArrayList<ParserTreeNode> fieldNodes = new ArrayList<>();
 
-    /** Returns a list of Field Nodes from an AST
+    /** Returns a list of ClassField Nodes from an AST
      * @param tree the AST
-     * @return a list of Field Nodes
+     * @return a list of ClassField Nodes
      */
     @SuppressWarnings("unchecked")
     public ArrayList<ParserTreeNode> getFields(RawSyntaxTree tree){

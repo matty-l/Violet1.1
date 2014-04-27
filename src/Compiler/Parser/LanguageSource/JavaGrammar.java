@@ -2,6 +2,7 @@ package Compiler.Parser.LanguageSource;
 
 import Compiler.Parser.CFG.AdvancedCFG;
 import Compiler.Parser.CFG.ContextFreeGrammar;
+import Compiler.Visitor.Java7.ImportVisitor;
 import IO.IOManager;
 
 import java.io.File;

@@ -1,8 +1,7 @@
-package Compiler.AbstractSyntaxTree;
+package Compiler.SemanticAnalyzer;
 
 import Compiler.Nodes.ASTNode;
 import Compiler.Nodes.ASTNodeType;
-import Compiler.Nodes.ASTNodeTypeBantam;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 
 import java.util.*;

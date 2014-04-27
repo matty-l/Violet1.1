@@ -532,10 +532,7 @@ public class GuiWindow{
     /** Sets the grammar of the current context
      * @param grammar the new grammar
      */
-    public void setGrammar(ContextFreeGrammar grammar){
-        //we'll accept unsafe cast for a bit
-        ((SmartRichTextArea) textArea).setGrammar(grammar);
-    }
+    public void setGrammar(ContextFreeGrammar grammar){ textArea.setGrammar(grammar); }
 
    public final SimpleStringProperty foregroundColor = new SimpleStringProperty();
    public final SimpleStringProperty backgroundColor = new SimpleStringProperty();
@@ -581,6 +578,7 @@ public class GuiWindow{
 
                     if (refactorVisitor != null){
                         refactorVisitor.setBaseToken(tokenOfClick);
+                        textArea.getCatalog().addAll(refactorVisitor.getOutcomes());
                         refactorDialog.refactor(textArea.getSelectedText());
                         refactorDialog.show();
                         refactorDialog.focusInput();

@@ -58,6 +58,7 @@ public abstract class Java7Visitor extends Visitor {
     public Object visitIdentifier(ASTNode node){return defaultVisit(node);}
     public Object visitAssignmentOperator(ASTNode node){return defaultVisit(node);}
     public Object visitSwitchLabel(ASTNode node) {return defaultVisit(node);}
+    public Object visitType(ASTNode node) {return defaultVisit(node);}
 
     /** Default behavior for the terminals is to return the terminal value as a string
      * @param node the terminal node
