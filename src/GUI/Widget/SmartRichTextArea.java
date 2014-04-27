@@ -42,6 +42,7 @@ public final class SmartRichTextArea extends RichTextArea {
 
 
     private ArrayList<ParserTreeNode> fieldNodes = new ArrayList<>();
+    private ClassTree classTree;
 
     /** Constructs a new SmartRichTextArea **/
     public SmartRichTextArea(){
@@ -75,6 +76,8 @@ public final class SmartRichTextArea extends RichTextArea {
 
     /** Signals that this word was "this", so the next one should be marked **/
     private int nextWord = 0;
+    /** Grabs the name of the next class (informal scope decision) **/
+    private String nextClass = "";
 
     /** Returns the associated start tag for a keyword, else empty string.
      * @param token the token to modify
@@ -83,7 +86,7 @@ public final class SmartRichTextArea extends RichTextArea {
      */
     @Override
     public String getStartModifier(LexerToken token, int index ){
-
+        markClass(token);
 
         //getting the token at the current index
         if (index < markedCaretPosition ){
@@ -92,7 +95,7 @@ public final class SmartRichTextArea extends RichTextArea {
 
         int locale = getCaretPosition() - index - token.getValue().length();
 //        System.out.println(token.getValue() + " -- " + locale);
-        openCompletionDialog(token, locale == 0 );
+        openCompletionDialog(token, locale == 0);
 
         if (attemptCompletion(token, index)) return "";
 
@@ -110,13 +113,24 @@ public final class SmartRichTextArea extends RichTextArea {
         return token.style;
     }
 
+    /** Marks the class - informal scope determination
+     * @param token the token indicating class
+     */
+    private void markClass(LexerToken token) {
+        if (token.getIds().equals(LexerToken.TokenIds.CLASS)) {
+            nextClass = "-1";
+        }
+        else if (nextClass.equals("-1") && token.getIds().equals(LexerToken.TokenIds.ID)) {
+            nextClass = token.getValue();
+        }
+
+    }
+
     private void openCompletionDialog(LexerToken token, boolean isSelected) {
 
 
         if (isSelected && token.getIds().equals(LexerToken.TokenIds.ID) || nextWord == 1) {
-            tabCompletionDialog.show(token);
-        }else if (isSelected){
-            System.out.println(token.getIds());
+            tabCompletionDialog.show(token,classTree,lastTree,nextClass);
         }
         nextWord = token.getIds().equals(LexerToken.TokenIds.THIS) ? 3 : nextWord--;
     }
@@ -134,9 +148,11 @@ public final class SmartRichTextArea extends RichTextArea {
                     setSearchToken(null);
                 }
                 if (indexOfReplacement+token.getValue().length() < getText().length())
-                    replaceText(indexOfReplacement,
-                            (indexOfReplacement + token.getValue().length()),
-                            replacementString);
+                    try{
+                        replaceText(indexOfReplacement,
+                                (indexOfReplacement + token.getValue().length()),
+                                replacementString);
+                    }catch(IndexOutOfBoundsException i){/*this is acceptable*/}
                 return "";
             }
 
@@ -239,7 +255,7 @@ public final class SmartRichTextArea extends RichTextArea {
     void handleRawAST(ASTBuilder buidler){
         Class type = classMap.get(getGrammar());
         lastTree = new RawSyntaxTree(buidler.getTreeHead(),type);
-        ClassTree classTree = new ClassTree();
+        classTree = new ClassTree();
 
         classTreeDecorator.decorate(lastTree,classTree,grammar);
         classTreeDecorator.transferOutcomes(getCatalog());

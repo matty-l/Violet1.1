@@ -67,6 +67,11 @@ public class ClassMethod {
         return "{"+name+" | "+returnType + " | " + params + "}";
     }
 
+    /** Returns the name of the method
+     * @return name of method
+     */
+    public String getName(){return name;}
+
 }
 
 

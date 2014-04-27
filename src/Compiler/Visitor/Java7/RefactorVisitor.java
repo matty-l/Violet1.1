@@ -37,6 +37,9 @@ public class RefactorVisitor extends Java7Visitor {
      */
     public HashSet<ParserTreeNode> getRefactorTokens(){return refactorTokens;}
 
+    /* Sets the base token
+     * @param base the new base token
+     */
     public void setBaseToken(LexerToken base){
         this.base = new CFGToken(base.getValue(),base.getValue(),
                 base.getLineNum(),base.getColNum());
@@ -44,17 +47,20 @@ public class RefactorVisitor extends Java7Visitor {
         refactorTokens.add(baseASTNode.treeNode);
     }
 
+    /* Visits type declaration */
     @Override
     public Object visitTypeDeclaration(ASTNode node){
         return scopeStatementSubroutine(node);
     }
 
+    /** Visits class declaration */
     @Override
     public ArrayList<String> visitClassDeclaration(ASTNode node){
         node.getChildren().get(node.getNumChildren() - 1).accept(this);
         return null;
     }
 
+    /* Visits field declaration */
     @Override
     public Object visitFieldDecl(ASTNode node){
         CFGToken token = node.getChildren().get(1).getChildren().get(
@@ -238,6 +244,7 @@ public class RefactorVisitor extends Java7Visitor {
         return node.getChildren().get(0).accept(this);
     }
 
+    /* Visits parenthetical expressions */
     @Override
     public Object visitParExpression(ASTNode node){
         for (ASTNode child : node.getChildren()){
@@ -246,6 +253,7 @@ public class RefactorVisitor extends Java7Visitor {
         return node.getChildren().get(0).accept(this);
     }
 
+    /* Visits selectors */
     @Override
     public ASTNode visitSelector(ASTNode node){
         for (ASTNode child : node.getChildren()) {
@@ -257,6 +265,7 @@ public class RefactorVisitor extends Java7Visitor {
         else return null;
     }
 
+    /* Visits identifiers */
     @Override
     public ASTNode visitIdentifier(ASTNode node){
         return node.getChildren().get(0);

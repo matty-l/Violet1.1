@@ -18,6 +18,8 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
 
     private ScopeTable scopes;
     private ArrayList<ParserTreeNode> fieldNodes = new ArrayList<>();
+    private ClassTree classTree;
+    private String curClass;
 
     /** Returns a list of ClassField Nodes from an AST
      * @param tree the AST
@@ -25,10 +27,12 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
      */
     public ArrayList<ParserTreeNode> getFields(RawSyntaxTree tree, ClassTree classTree){
         scopes = new ScopeTable();
+        this.classTree = classTree;
         tree.getRoot().accept(this);
         return fieldNodes;
     }
 
+    /* Visits a compilation unit */
     @Override
     @SuppressWarnings("unchecked")
     public ArrayList<String> visitCompilationUnit(ASTNode node){
@@ -41,6 +45,7 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return fields;
     }
 
+    /* Visits a type declaration */
     @Override
     @SuppressWarnings("unchecked")
     public ArrayList<String> visitTypeDeclaration(ASTNode node){
@@ -57,6 +62,7 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return fields;
     }
 
+    /* Visits a class declaration */
     @Override
     @SuppressWarnings("unchecked")
     public ArrayList<String> visitClassDeclaration(ASTNode node){
@@ -67,9 +73,12 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return fields;
     }
 
+    /* Visits a normal class declaration */
     @Override
     @SuppressWarnings("unchecked")
     public ArrayList<String> visitNormalClassDeclaration(ASTNode node){
+        curClass = ""+((ASTNode)node.getChildren().get(0).accept(this)).accept(this);
+
         ArrayList<String> fields = new ArrayList<>();
         for ( int i = 0; i < node.getNumChildren(); i++){
             Object o = node.getChildren().get(i).accept(this);
@@ -79,6 +88,7 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return fields;
     }
 
+    /** Visits a member declaration **/
     @Override
     @SuppressWarnings("unchecked")
     public ArrayList<String> visitMemberDecl(ASTNode node){
@@ -90,9 +100,11 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return fields;
     }
 
+    /** Visits an enumerated declaration **/
     @Override
     @SuppressWarnings("unchecked")
     public ArrayList<String> visitEnumDeclaration(ASTNode node){
+        curClass = ""+node.getChildren().get(0).accept(this);
         ArrayList<String> fields = new ArrayList<>();
 
         for (ASTNode child : node.getChildren()){
@@ -112,6 +124,7 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         fieldNodes.add(node.getChildren().get(1).treeNode);
         //add to the class scope
         String name = node.getChildren().get(1).getChildren().get(0).treeNode.getValue();
+        classTree.addFieldToClass(curClass, name, "");
 
         if (scopes.indexOf(name) == 1){
             int linenum = node.getChildren().get(1).getChildren().get(0
@@ -125,12 +138,13 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return new ArrayList<String>(){{add(node.getChildren().get(1).treeNode.getValue());}};
     }
 
+    /** Visits a new scope declaration **/
     @Override
     public Object visitNewScopeMemberDecl(ASTNode node){
         return scopeStatementSubroutine(node);
     }
 
-
+    /** Visits a formal declaration **/
     @Override
     public Object visitFormalParameterDecls(ASTNode node){
         int lastIndex = node.getChildren().size() - 1;
@@ -139,10 +153,11 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
             scopes.add(idNode.getChildren().get(0)
                     .getChildren().get(0).treeNode.getValue(),idNode);
         }
-        
+
         return null;
     }
 
+    /** Visits a variable decalration **/
     @Override
     public Object visitVariableDeclarator(ASTNode node){
         ASTNode treeNode = (ASTNode) node.getChildren().get(0).accept(this);
@@ -188,6 +203,7 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         return null;
     }
 
+    /** Visits a primary decalration **/
     @Override
     public Object visitPrimary(ASTNode node){
         //grab relevant values
@@ -270,5 +286,14 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         scopes.wakeUp();
         return null;
     }
+
+    /** Visits an interface declaration **/
+    @Override public Object visitInterfaceDeclaration(ASTNode node){
+        scopes.wakeUp();
+        curClass = ""+node.getChildren().get(0).accept(this);
+        scopes.incept();
+        return defaultVisit(node);
+    }
+
 
 }

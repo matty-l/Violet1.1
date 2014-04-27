@@ -1,16 +1,21 @@
 package GUI.Window;
 
 import Compiler.Scanner.LexerToken;
+import Compiler.SemanticAnalyzer.ClassTree.ClassTree;
+import Compiler.SemanticAnalyzer.RawSyntaxTree;
+import Compiler.Visitor.Java7.RefactorVisitor;
 import GUI.Widget.SmartRichTextArea;
 import javafx.geometry.Side;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
+ * This widget manages tab completion
  * Created by Matt Levine on 4/27/14.
  */
 public class TabCompletionDialog {
@@ -23,11 +28,17 @@ public class TabCompletionDialog {
     private final SmartRichTextArea textArea;
     private LexerToken token;
 
+    /** Constructs a new tab completion dialog
+     * @param textArea a smart text are
+     */
     public TabCompletionDialog(final SmartRichTextArea textArea){
         this.textArea = textArea;
         addMenuItems(number_text_suggestions);
     }
 
+    /** Populates menu items
+     * @param numItems number of items
+     */
     private void addMenuItems(int numItems) {
         textSuggestions = new MenuItem[numItems];
         for (int i = 0; i < numItems; i++){
@@ -36,37 +47,71 @@ public class TabCompletionDialog {
         }
     }
 
-    public void makeWindow(String word, double xoffset,
-                           double yoffset, int indexPosition){
-
-    }
-
-    public void show(final LexerToken token){
+    /** Displays suggestiosn
+     * @param token the token
+     * @param classTree the class tree
+     * @param tree a syntax tree
+     * @param classOfToken the name of token's class
+     */
+    public void show(final LexerToken token, ClassTree classTree, RawSyntaxTree tree,
+                     String classOfToken){
+        if (tree == null || classTree == null) return;
         this.token = token;
         wordPosition[0] = token.getColNum();
         wordPosition[1] = token.getLineNum();
-        String[] favoriteWords = getPopularWords(token);
+        String[] favoriteWords = getPopularWords(token,classTree,tree,classOfToken);
+        if (favoriteWords.length == 0) {
+            popup.hide();
+            return;
+        }
 
         for (int i = 0; i < number_text_suggestions; i++){
-            if ( !"".equals(favoriteWords[i]) && favoriteWords != null){
+            if ( !"".equals(favoriteWords[i]) && favoriteWords[i] != null){
                 textSuggestions[i].setVisible(true);
-                makeSuggestionWindow(favoriteWords[i],textArea.getCaretPosition(),0,i);
+                makeSuggestionWindow(favoriteWords[i], i);
             }else{
                 textSuggestions[i].setVisible(false);
             }
         }
     }
 
-    private String[] getPopularWords(final LexerToken token) {
-        return new String[]{"sug1","sug2","sug3","sug4"};
+    /** Returns suggestion-words
+     * @param token the token
+     * @param classTree the class tree
+     * @param tree a syntax tree
+     * @param classOfToken the name of token's class
+     * @return list of suggestions
+     */
+    private String[] getPopularWords(final LexerToken token, ClassTree classTree,
+                                     RawSyntaxTree tree, String classOfToken) {
+        RefactorVisitor getScopeOfToken = new RefactorVisitor(tree);
+        getScopeOfToken.setBaseToken(token);
+
+        List<String> options = classTree.getMethodsOfClass(classOfToken);
+        options.addAll(classTree.getFieldsOfClass(classOfToken));
+
+        ArrayList<String> betterOptions = new ArrayList<>();
+        int index = 0;
+        for (String option : options){
+            if (index >= number_text_suggestions) break;
+            if (option.startsWith(token.getValue()) &&
+                    !betterOptions.contains(token.getValue())) {
+                betterOptions.add(option);
+                index++;
+            }
+        }
+
+        return betterOptions.subList(0,index).toArray(
+                new String[number_text_suggestions]);
     }
 
-    private void makeSuggestionWindow(final String word, final double xoffset,
-                                      final double yoffset, final int indexPosition){
+    /** Shows suggestion window
+     * @param word word to show from
+     * @param indexPosition index of word placement
+     */
+    private void makeSuggestionWindow(final String word, final int indexPosition){
         textSuggestions[indexPosition].setText(word);
-        textSuggestions[indexPosition].setOnAction(actionEvent -> {
-            completeTheWord(indexPosition);
-        });
+        textSuggestions[indexPosition].setOnAction(actionEvent -> completeTheWord(indexPosition));
 
         double[] xyPosition = getScreenXY(textArea);
         if (xyPosition == null) return;
@@ -87,25 +132,40 @@ public class TabCompletionDialog {
         };
     }
 
+    /** Hides the popup **/
     public void hide(){
         popup.hide();
     }
 
+    /** Replaces the word in the text area **/
     public void completeTheWord(final int index){
         String word = textSuggestions[index].getText();
+        if (word.equals("") || word == null) return;
         textArea.completeWord(new CompletionToken(token,word));
     }
 
+    /** Token containing completion information **/
     public final class CompletionToken{
         private final LexerToken token;
         private final String replacementWord;
 
+        /** Constructs a new token
+         * @param token the lexer token to replace
+         * @param replacementWord the word to replace it with
+         */
         public CompletionToken(final LexerToken token, final String replacementWord){
             this.token = token;
             this.replacementWord = replacementWord;
         }
 
+        /** Retursn the lexer token
+         * @return hte token
+         */
         public LexerToken getToken(){return token;}
+
+        /** Return the replacement word
+         * @return the replacement word
+         */
         public String getReplacementString(){return replacementWord;}
     }
 

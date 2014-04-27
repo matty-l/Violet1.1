@@ -37,4 +37,9 @@ public class ClassField {
         result = 31 * result + type.hashCode();
         return result;
     }
+
+    /** Returns the name of the field
+     * @return the name of the field
+     */
+    public String getName() { return name;  }
 }

@@ -239,4 +239,26 @@ public class ClassTreeNode {
             System.out.println(m);
         }
     }
+
+    /** Returns a list of the names of methods
+     * @return names of methods
+     */
+    public List<String> getMethods() {
+        ArrayList<String> methods = new ArrayList<>(); //fixme: use foreach
+        for (ClassMethod m : this.methods){
+            methods.add(m.getName());
+        }
+        return methods;
+    }
+
+    /** Returns a list of the names of fields
+     * @return names of fields
+     */
+    public List<String> getFields() {
+        ArrayList<String> fields = new ArrayList<>();
+        for (ClassField f : this.fields){
+            fields.add(f.getName());
+        }
+        return fields;
+    }
 }

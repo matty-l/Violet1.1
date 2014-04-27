@@ -131,7 +131,10 @@ public final class FinderDialog extends UtilWindow {
             final int j = i;
             buttons[i].selectedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
                 flags[j] = aBoolean2 ? buttons[j].getId() : "";
-                TextField searchField = ((TextField)((BorderPane)root.getCenter()).getCenter());
+                TextField searchField;
+                try{
+                    searchField = ((TextField)((BorderPane)root.getCenter()).getCenter());
+                }catch (ClassCastException e){return;}
                 if (j == 3 && !aBoolean2 ) buttons[3].setSelected(true);
                 window.find(new SearchToken(searchField.getText(),
                         SearchToken.SearchTokenType.valueOf("ALL" + flags[2] + flags[0] + flags[1] + flags[3])));
@@ -222,7 +225,7 @@ public final class FinderDialog extends UtilWindow {
         leftAlphaPane.setLeft(alphaDecr);
         leftAlphaPane.setRight(alphaIncr);
         alphaPane.setLeft(leftAlphaPane);
-        alphaPane.setBottom(new Label("\n\n\n\n\n")); //also sketchy
+        alphaPane.setBottom(new Label("\n\n\n")); //also sketchy
 
         formatButtonCool(alphaDecr, alphaIncr);
         root.setBottom(alphaPane);
