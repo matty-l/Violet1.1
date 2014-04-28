@@ -73,7 +73,7 @@ public class GuiWindow{
     /** Launches a new GUI window  **/
     public void show(Stage primaryStage){
         //add a title
-        primaryStage.setTitle("Cerulean");
+        primaryStage.setTitle("Violet");
         //construct the main window
         root = new BorderPane();
         primaryStage.setScene(new Scene(root,width,length));

@@ -52,7 +52,8 @@ public class ClassTreeBuilderVisitor extends Java7Visitor {
          * production, i.e. making NormalExtendingClassDecl different than
          * NormalClassDecl
          */
-        if (node.getChildren().get(1).nodeType.equals(ASTNodeTypeJava7.EXTENDS)){
+        if (node.getNumChildren() > 1 &&
+                node.getChildren().get(1).nodeType.equals(ASTNodeTypeJava7.EXTENDS)){
             parentName = ""+node.getChildren().get(2).accept(this);
         }
         try{

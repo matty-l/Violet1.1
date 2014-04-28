@@ -57,7 +57,8 @@ public final class SmartRichTextArea extends RichTextArea {
      * @return true if the token is matched
      */
     private boolean isField(LexerToken token){
-        for (ParserTreeNode treeNode : fieldNodes){
+        for (int i = 0; i < fieldNodes.size(); i++){
+            ParserTreeNode treeNode = fieldNodes.get(i);
             CFGToken tok = treeNode.value.getEnd_chartRow().getCFGToken();
             if (token.getValue().equals(tok.getValue()) && token.getColNum() == tok.getColNum() &&
                     tok.getLineNum() == token.getLineNum())
@@ -181,7 +182,6 @@ public final class SmartRichTextArea extends RichTextArea {
 
     private boolean attemptCompletion(LexerToken token, int index) {
         if (isCompletable(token)){
-            System.out.println("Completing "+token.getLineNum()+ " "+token.getValue());
             int indexOfReplacement = getText().indexOf(token.getValue(),index);
 
             if (indexOfReplacement+token.getValue().length() < getText().length() &&

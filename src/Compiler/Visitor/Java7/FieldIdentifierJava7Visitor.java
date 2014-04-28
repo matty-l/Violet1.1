@@ -225,7 +225,8 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
 
             if ( level == 1){
                 fieldNodes.add(posId.treeNode);
-            }else if (level == -1 && posId.getChildren().get(0).nodeType.toString().equals("ID")){
+            }else if (level == -1 && posId.getChildren().get(0).nodeType.toString().equals("ID")
+                    && !classTree.containsClassEntry(posId.getChildren().get(0).treeNode.getValue())){
                 ASTNode badNode = posId.getChildren().get(0);
                 addOutcome(badNode.getAssociatedLineNum(), "Undeclared variable " +
                         badNode.treeNode.getValue() + " at lne " +

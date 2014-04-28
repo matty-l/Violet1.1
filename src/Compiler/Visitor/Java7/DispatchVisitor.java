@@ -68,8 +68,10 @@ public class DispatchVisitor extends Java7Visitor{
     public Object visitPrimary(ASTNode node){
         //grab relevant values
         ASTNode posId = node.getChildren().get(0);
-        if (node.getNumChildren() == 1 ) handleVariablePrimaries(posId);
-        else if (node.getNumChildren() == 2) handleDispatchPrimaries(posId);
+        /*if (node.getNumChildren() == 1 ) handleVariablePrimaries(posId);
+        else if (node.getNumChildren() == 2) {
+            handleDispatchPrimaries(posId);
+        }*/
 
         //pass the buck
         for (ASTNode child : node.getChildren()) {
@@ -90,7 +92,6 @@ public class DispatchVisitor extends Java7Visitor{
 
     /** Handles dispatch primaries **/
     private void handleDispatchPrimaries(ASTNode posId){
-        System.out.println("handling dispatch primary");
         if (posId.getChildren().size() > 0){
             int level = scopes.indexOf(
                     posId.getChildren().get(0).treeNode.getValue());
@@ -98,9 +99,6 @@ public class DispatchVisitor extends Java7Visitor{
             if (level == -1 && posId.getChildren().get(0).nodeType.toString().equals("ID")){
                 ASTNode badNode = posId.getChildren().get(0);
                 addOutcome(badNode.getAssociatedLineNum(), "Undeclared method " +
-                        badNode.treeNode.getValue() + " at lne " +
-                        badNode.getAssociatedLineNum());
-                System.out.println("Adding outcome: "+ "Undeclared method " +
                         badNode.treeNode.getValue() + " at lne " +
                         badNode.getAssociatedLineNum());
             }
@@ -159,9 +157,12 @@ public class DispatchVisitor extends Java7Visitor{
         return node.getChildren().get(0).getEnd_ColCFGToken().getValue();
     }
 
+    private boolean isExpression3 = false;
+
     // -- Not Handling These Right Now
     @Override public Object visitExpression3(ASTNode node){
         int mark = -1;
+        isExpression3 = true;
 
         for (ASTNode child : node.getChildren()){
             mark--;
@@ -180,5 +181,7 @@ public class DispatchVisitor extends Java7Visitor{
                 mark = 2;
             }
         }
-        return null;    }
+        isExpression3 = true;
+        return null;
+    }
 }

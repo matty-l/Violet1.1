@@ -41,7 +41,7 @@ public class TreeFlattenVisitor extends Java7Visitor{
 
     /** Returns a representative matrix of the root, simple summation of quantity of important
      * features. Guaranteed to be the same when called multiple times, or when called from separate
-     * visitors on the same root. See "Cerulean Documentation" accompanying the API for details
+     * visitors on the same root. See "Violet Documentation" accompanying the API for details
      * and mathematical veracity.
      * @return a representative matrix.
      */
