@@ -2,10 +2,12 @@ package GUI.Util;
 
 import Compiler.Parser.LanguageSource.BantamGrammarSource;
 import Compiler.Parser.LanguageSource.JavaGrammar;
+import Compiler.SemanticAnalyzer.Util.BuiltInClassCompiler;
 import GUI.DesktopController;
 import GUI.Widget.DirectoryPanel;
 import IO.IOManager;
 import IO.JavaCompiler;
+import Neuralizer.IO.NeuralLog;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -19,6 +21,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.util.Iterator;
 
 /**
  * Author: Matt
@@ -49,7 +52,6 @@ public class GuiLinkageManager {
     /** Link the GUI items to IO items **/
     public void linkGuiToIO(Stage stage){
 
-        final Stage finalStage = stage;
         final MenuBar menuBar = desktopController.getMenu();
 
         //set the menubar actions and shortcuts
@@ -62,7 +64,7 @@ public class GuiLinkageManager {
                 fileChooser.getExtensionFilters().addAll(
                         new FileChooser.ExtensionFilter("Source Code","*.java")
                 );
-                saveFile = fileChooser.showSaveDialog(finalStage);
+                saveFile = fileChooser.showSaveDialog(stage);
             }
             else{
                 saveFile = new File(desktopController.getName());
@@ -90,11 +92,11 @@ public class GuiLinkageManager {
             fileChooser.getExtensionFilters().addAll(
                     new FileChooser.ExtensionFilter("Source Code","*.java")
             );
-            File loadFile = fileChooser.showOpenDialog(finalStage);
+            File loadFile = fileChooser.showOpenDialog(stage);
             if (loadFile != null){
                 desktopController.addTab();
                 desktopController.updateText(IOManager.loadFile(loadFile));
-                finalStage.setTitle("Elope - " + loadFile.getName());
+                stage.setTitle("Elope - " + loadFile.getName());
                 desktopController.setName(loadFile.getPath());
                 desktopController.setTabTitle(loadFile.getName());
             }
@@ -104,36 +106,37 @@ public class GuiLinkageManager {
         menuBar.getMenus().get(0).getItems().get(0).setOnAction(t -> {
             desktopController.clearWindow();
             desktopController.setTabTitle("        ");
-            finalStage.setTitle(null);
+            stage.setTitle(null);
         });
 
         // --- Find In Project
-        menuBar.getMenus().get(0).getItems().get(5).setOnAction(t -> {
-            desktopController.showFinderDialog();
-        });
+        menuBar.getMenus().get(0).getItems().get(5).setOnAction(t ->
+                desktopController.showFinderDialog());
 
         // -- Run Program
         menuBar.getMenus().get(1).getItems().get(0).setOnAction(t -> {
             desktopController.clearOutput();
+            //Report loading errors
+            Iterator<String> loggedCompilationMessages = BuiltInClassCompiler.getLog();
+            while(loggedCompilationMessages.hasNext()){
+                JavaCompiler.report(loggedCompilationMessages.next(),"ERROR");
+            }
             String programName = desktopController.getName();
             JavaCompiler.report("Running "+programName+"...","PLAIN");
             JavaCompiler.runProgram(programName);
-            JavaCompiler.report("\nProcess Terminated.","PLAIN");
+            JavaCompiler.report("\nProcess Terminated.", "PLAIN");
         });
 
         // -- Set Grammar
-        ((Menu)menuBar.getMenus().get(1).getItems().get(1)).getItems().get(0).setOnAction(t -> {
-            desktopController.setGrammar(BantamGrammarSource.getBantamGrammar());
-        });
-        ((Menu)menuBar.getMenus().get(1).getItems().get(1)).getItems().get(1).setOnAction(t -> {
-            desktopController.setGrammar(JavaGrammar.getJavaGrammar());
-        });
+        ((Menu)menuBar.getMenus().get(1).getItems().get(1)).getItems().get(0).setOnAction(t ->
+                desktopController.setGrammar(BantamGrammarSource.getBantamGrammar()));
+        ((Menu)menuBar.getMenus().get(1).getItems().get(1)).getItems().get(1).setOnAction(t ->
+                desktopController.setGrammar(JavaGrammar.getJavaGrammar()));
 
 
         // -- Open Settings Dialog
-        menuBar.getMenus().get(2).getItems().get(0).setOnAction(t -> {
-            desktopController.showSettingsDialog();
-        });
+        menuBar.getMenus().get(2).getItems().get(0).setOnAction(t ->
+                desktopController.showSettingsDialog());
 
         // -- Clear Output
         JavaCompiler.outputToggler.addListener(

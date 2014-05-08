@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public final class State{
 
     public final String name;
-    public final Production production;
+    private final Production production;
     private final ChartRow start_chartRow;
     private ChartRow end_chartRow;
     private final int dot_index;
@@ -135,5 +135,12 @@ public final class State{
      */
     public ChartRow getEnd_chartRow() {
         return end_chartRow;
+    }
+
+    /** Returns the productions
+     * @return the productions
+     */
+    public Production getProduction() {
+        return production;
     }
 }

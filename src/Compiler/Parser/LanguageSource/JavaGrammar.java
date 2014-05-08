@@ -514,7 +514,11 @@ public class JavaGrammar {
                 "ForVariableDeclaratorsRestAssembly->COMMA VariableDeclarator " +
                                                     "ForVariableDeclaratorsRestAssembly|"
         // ForInit FIXME: Really? This isn't a Java 7 Specification Typo...?
-        + "ForInit-> |"
+        + "ForInit-> |" +
+                "ForInit->StatementExpressionList|" +
+                "ForInit->LocalVariableDeclarationStatement|" +
+                "StatementExpressionList->StatementExpression|" +
+                "StatementExpressionList->StatementExpression StatementExpressionList|"
         // ForUpdate
         + "ForUpdate->StatementExpression|" +
                 "ForUpdate->StatementExpression ForUpdateAssembly|" +

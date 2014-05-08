@@ -177,14 +177,18 @@ abstract class MutableSlowSearchRule implements Rule {
 
                 /**Checks for overflow in the integer, changes token type if found **/
                 private void checkOverflow(){
-                    try{
-                        Integer.parseInt(lastString);
+                    //longs can end with "L"; parseLong inputs can't
+                    String overflow = lastString;
+                    //try{
+//                        if (lastString.endsWith("L")||lastString.endsWith("l"))
+//                            overflow = lastString.substring(0,lastString.length()-1);
+                        //Long.parseLong(overflow);
                         setTokenId(LexerToken.TokenIds.INT_CONST);
                         message = "";
-                    }catch (NumberFormatException nfs){
+                    /*}catch (NumberFormatException nfs){
                         setTokenId(LexerToken.TokenIds.LEX_ERROR);
                         message = "Integer " + lastString + " too large";
-                    }
+                    }*/
 
                 }
 

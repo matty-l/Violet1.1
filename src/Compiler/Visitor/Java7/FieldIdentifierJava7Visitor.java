@@ -5,6 +5,8 @@ import Compiler.SemanticAnalyzer.RawSyntaxTree;
 import Compiler.SemanticAnalyzer.Util.ScopeTable;
 import Compiler.Nodes.ASTNode;
 import Compiler.Parser.ParserTree.ParserTreeNode;
+import Neuralizer.IO.NeuralLog;
+
 import java.util.ArrayList;
 
 /**
@@ -164,7 +166,25 @@ public class FieldIdentifierJava7Visitor extends Java7Visitor {
         //check for duplicate declaration
         if (scopes.indexOf(treeNode.treeNode.getValue()) > 1){
             int linenum = node.getAssociatedLineNum();
-            addOutcome(linenum,"Duplicate variable declaration at line "+linenum);
+            addOutcome(linenum,"Duplicate variable \"" + treeNode.treeNode.getValue() +
+                    "\" declaration at line "+linenum);
+        }
+        scopes.add(treeNode.treeNode.getValue(), treeNode);
+
+        for (ASTNode child : node.getChildren()) child.accept(this);
+
+        return node;
+    }
+
+    /* Visit variable declarator id*/
+    @Override
+    public Object visitVariableDeclaratorId(ASTNode node){
+        ASTNode treeNode = (ASTNode) node.getChildren().get(0).accept(this);
+        //check for duplicate declaration
+        if (scopes.indexOf(treeNode.treeNode.getValue()) > 1){
+            int linenum = node.getAssociatedLineNum();
+            addOutcome(linenum,"Duplicate variable \"" + treeNode.treeNode.getValue() +
+                    "\" declaration at line "+linenum);
         }
         scopes.add(treeNode.treeNode.getValue(), treeNode);
 

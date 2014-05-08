@@ -1,6 +1,7 @@
 package Compiler.Visitor.Java7;
 
 import Compiler.Nodes.ASTNode;
+import Compiler.Nodes.ASTNodeType;
 import Compiler.Nodes.ASTNodeTypeJava7;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 import Compiler.SemanticAnalyzer.ClassTree.ClassTree;
@@ -32,14 +33,17 @@ public class ClassTreeBuilderVisitor extends Java7Visitor {
     @Override public Object visitClassOrInterfaceDeclaration(ASTNode node){
         Object nextIsFinal = false;
         for (ASTNode child : node.getChildren()){
-            child.getChildren().get(0).setProperty("isFinal", nextIsFinal);
+            if (child.getNumChildren() > 0)
+                child.getChildren().get(0).setProperty("isFinal", nextIsFinal);
             nextIsFinal = child.accept(this);
         }
         return null;
     }
 
     @Override public Object visitModifier(ASTNode node){
-        return node.getChildren().get(0).nodeType.equals(ASTNodeTypeJava7.FINAL);
+        if (node.getNumChildren() > 0)
+            return node.getChildren().get(0).nodeType.equals(ASTNodeTypeJava7.FINAL);
+        return null;
     }
 
 
@@ -52,21 +56,28 @@ public class ClassTreeBuilderVisitor extends Java7Visitor {
          * production, i.e. making NormalExtendingClassDecl different than
          * NormalClassDecl
          */
-        if (node.getNumChildren() > 1 &&
-                node.getChildren().get(1).nodeType.equals(ASTNodeTypeJava7.EXTENDS)){
-            parentName = ""+node.getChildren().get(2).accept(this);
+        if (node.getNumChildren() > 1) {
+            ASTNodeType type = node.getChildren().get(1).nodeType;
+            if (type.equals(ASTNodeTypeJava7.EXTENDS)) {
+                parentName = "" + node.getChildren().get(2).accept(this);
+            }/*else if (type.equals(ASTNodeTypeJava7.TypeParameters)){
+                node.getChildren().get(1).accept(this);
+            }*/
         }
+        if (node.getProperty("isFinal") == null) node.setProperty("isFinal",false);
         try{
             classTree.addClassTreeNode(new ClassTreeNode(className,node,
                     node.getProperty("isFinal").equals(true)),parentName);
         }catch(ClassTree.MissingClassReferenceException e){
             //report if the parent isn't defined
             addOutcome(node.getAssociatedLineNum(),"Class "+parentName+" is not recognized");
-        } 
+        }
         //report if the parent is final
         if (classTree.classIsFinal(parentName)) {
             addOutcome(node.getAssociatedLineNum(), "Class " + parentName + " is final");
         }
+
+        for (ASTNode child : node.getChildren()) child.accept(this);
 
         return null;
     }
@@ -100,4 +111,15 @@ public class ClassTreeBuilderVisitor extends Java7Visitor {
     public Object visitIdentifier(ASTNode node){
         return node.getChildren().get(0).accept(this);
     }
+
+    @Override
+    public Object visitTypeParameter(ASTNode node){
+        String className = ""+node.getChildren().get(0).accept(this);
+        classTree.addClassTreeNode(new ClassTreeNode(className, (Class) null,true),"Object");
+        return defaultVisit(node);
+    }
+
+
 }
+
+

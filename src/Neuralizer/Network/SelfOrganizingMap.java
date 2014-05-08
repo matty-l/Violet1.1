@@ -1,5 +1,6 @@
 package Neuralizer.Network;
 
+import Neuralizer.IO.NeuralLog;
 import Neuralizer.Network.NormalizeInput.NormalizationType;
 import Neuralizer.Structure.Matrix;
 
@@ -32,6 +33,23 @@ public class SelfOrganizingMap implements Serializable{
         outputWeights = new Matrix(outputNeuronCount, inputNeuronCount + 1);
         output = new double[outputNeuronCount];
         this.normalizationType = normalizationType;
+    }
+
+    /** Constructs a new SOM from a known output matrix
+     * @param inputMtx the constructor, assumes it is a valid output matrix
+     */
+    public SelfOrganizingMap(final Matrix inputMtx, final NormalizationType type){
+        if (inputMtx == null) {
+            NeuralLog.logError(new RuntimeException("Canot create SOM from null matrix"),
+                    Thread.currentThread());
+        }
+
+        inputNeuronCount = inputMtx.getRows();
+        outputNeuronCount = inputMtx.getCols() - 1;
+
+        outputWeights = inputMtx.clone();
+        output = new double[outputNeuronCount];
+        normalizationType = type;
     }
 
     /** Returns the input neuron count **/
@@ -79,8 +97,8 @@ public class SelfOrganizingMap implements Serializable{
                         * input.getNormfac();
             }catch(Matrix.UnsupportedMatrixOperation e){
                 String err = "SOM Err: Input to SOM does not match trained input dimension";
-                System.out.println(e);
-                throw new SelfOrganizingMapException(err);
+                NeuralLog.logMessage(err);
+                NeuralLog.logError(e,Thread.currentThread());
             }
              output[i] = (output[i]+1.0)/2.0;
             if (output[i] > biggest){

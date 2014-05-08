@@ -170,7 +170,7 @@ public class DirectoryPanel extends ScrollPane {
         private final File data;
         private final ArrayList<traversable> files;
         boolean traversed, overflow;
-        public final int overflowSize = 100;
+        public final int overflowSize = 250;
 
         /** Construct a new folder with given name
          * @param name The name of the folder

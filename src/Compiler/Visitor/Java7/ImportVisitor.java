@@ -3,6 +3,7 @@ package Compiler.Visitor.Java7;
 import Compiler.SemanticAnalyzer.RawSyntaxTree;
 import Compiler.Nodes.ASTNode;
 import GUI.Window.Utility.UtilWindow;
+import Neuralizer.IO.NeuralLog;
 import javafx.scene.text.Text;
 
 import java.io.*;
@@ -53,7 +54,8 @@ public class ImportVisitor extends Java7Visitor{
             Method[] declaredMethods = classObject.getDeclaredMethods();
             Field[] declaredFields = classObject.getDeclaredFields();
         }catch (ClassNotFoundException c){
-            System.out.println("Couldn't find class "+className);
+            NeuralLog.logMessage("Couldn't find class " + className);
+            NeuralLog.logError(c,Thread.currentThread());
         }
         classes.add(className);
     }

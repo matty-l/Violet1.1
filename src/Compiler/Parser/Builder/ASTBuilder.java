@@ -29,6 +29,11 @@ public class ASTBuilder implements Builder {
         return tree;
     }
 
+    @Override
+    public Object build(Chart chart) {
+        throw new BuildMethodNotImplemented();
+    }
+
     /** Subroutine for building ParserTree
      * @param children the children of the input node
      * @param state the input state or current head
@@ -37,8 +42,7 @@ public class ASTBuilder implements Builder {
      * @return a tree of possible derivations from the input
      */
     private ArrayList<ParserTreeNode> buildTree(final ArrayList<ParserTreeNode> children,
-                             final State state, int rule_index, ChartRow end_chartRow){
-
+                                                final State state, int rule_index, ChartRow end_chartRow){
         ChartRow start_chartRow = null; //might be wasted if rule_index < 0
         if (rule_index < 0){
             //a little complex (and some extra packaging going on) - just creating a node
@@ -85,9 +89,9 @@ public class ASTBuilder implements Builder {
     /** Prints to output the first derivation tree **/
     public void printTree(){
         if (tree != null)
-        for (ParserTreeNode node : tree){
-            node.print(0);
-        }
+            for (ParserTreeNode node : tree){
+                node.print(0);
+            }
     }
 
     /** Tests prioritization of ast-builder **/

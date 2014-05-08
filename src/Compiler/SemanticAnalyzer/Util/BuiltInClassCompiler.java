@@ -2,7 +2,12 @@ package Compiler.SemanticAnalyzer.Util;
 
 import Compiler.SemanticAnalyzer.ClassTree.ClassTreeNode;
 import GUI.Window.Utility.UtilWindow;
+import IO.JavaCompiler;
+import Neuralizer.IO.NeuralLog;
+import javafx.scene.Scene;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,8 +36,13 @@ public final class BuiltInClassCompiler {
         try{
             langClasses.addAll(getLangLibrary());
             updateParentalControls();
-        }catch (IOException | MissingLangDirectoryException e){
-            throwError();
+        }catch (IOException | MissingLangDirectoryException | MissingJrtJarException e){
+            throwError(e);
+            OBJECT = new ClassTreeNode("Object", (Class) null,false);
+            classMap.put("Object",OBJECT);
+            ClassTreeNode STRING = new ClassTreeNode("String",(Class)null,false);
+            classMap.put("String",STRING);
+            STRING.setParent(OBJECT);
         }
     }
 
@@ -40,6 +50,11 @@ public final class BuiltInClassCompiler {
      * @return list of messages
      */
     public static Iterator<String> getLog(){ return log.listIterator(); }
+
+    /** Returns the number of logged events in the BuiltInClass
+     * @return number of logged events
+     */
+    public static int getNumLoggedEvents(){return log.size();}
 
     /** Returns the ClassTreeNode for the java.lang.Object Class
      * @return the Object ClassNode
@@ -97,6 +112,8 @@ public final class BuiltInClassCompiler {
         langDir = langDir.replaceAll("%20"," ");
         if (langDir == null ) reportMissingLangDir();
         assert langDir != null;
+
+        if (!langDir.contains("rt.jar")) throw new MissingJrtJarException();
         String langDirAbr =
                 langDir.substring(langDir.indexOf("C:"),langDir.indexOf("rt.jar"))+"classlist";
         File langDirFile = new File(langDirAbr);
@@ -153,18 +170,9 @@ public final class BuiltInClassCompiler {
 
 
     /** Displays a relevant error message **/
-    private static void throwError(){
-        //FIXME: provide error messages too?
-        new UtilWindow("Error",300,300) {
-            @Override
-            protected void setCloseConditions() {}
-            @Override
-            protected void addWidgets(){
-                super.addWidgets();
-                String err = "Failed to load java.lang class objects";
-                root.setCenter(new Text(err));
-            }
-        }.show();
+    private static void throwError(Exception e){
+        NeuralLog.logError(e,Thread.currentThread());
+        log.add(e.getMessage());
     }
 
     /** Reports a failure to load the java Lang directory **/
@@ -189,5 +197,11 @@ class MissingLangDirectoryException extends RuntimeException{
 class MissingObjectException extends RuntimeException{
     public MissingObjectException(){
         super("Lang Initialization Err: Could not locate class \"Object\"");
+    }
+}
+
+class MissingJrtJarException extends RuntimeException{
+    public MissingJrtJarException(){
+        super("Lang Initialization Err: Could not locate rt.jar");
     }
 }

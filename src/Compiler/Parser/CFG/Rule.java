@@ -3,8 +3,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * A rule represents a Terminal or Non-Terminal component of a Parser.CFG.
- * A rule is immutable (except that its abstraction status can be toggled).
+ * A rule represents a Terminal or Non-Terminal component of a CFG.
+ * A rule is immutable.
  * Created by Matt Levine on 3/13/14.
  * @author Matt Levine
  */

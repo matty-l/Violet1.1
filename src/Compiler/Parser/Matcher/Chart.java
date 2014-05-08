@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * parser-generators.
  * Created by Matt Levine on 3/13/14.
  */
-final class Chart extends ArrayList<ChartRow>{
+public final class Chart extends ArrayList<ChartRow>{
 
     /** Constructs a new Chart from an input of CFGTokens
      * @param lexerTokens the input for the chart

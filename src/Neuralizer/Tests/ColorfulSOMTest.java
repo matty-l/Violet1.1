@@ -1,5 +1,6 @@
 package Neuralizer.Tests;
 
+import Neuralizer.IO.NeuralLog;
 import Neuralizer.Network.NormalizeInput;
 import Neuralizer.Network.SelfOrganizingMap;
 import Neuralizer.Network.TrainSelfOrganizingMap;
@@ -77,7 +78,7 @@ public final class ColorfulSOMTest extends JFrame implements Runnable, KeyEventD
                 LearningMethod.ADDITIVE,0.5);
         trainer.initialize(); //fixme: should this be automatically called? If not, make invariant
         paint(getGraphics());
-        System.out.println("Initialized");
+        NeuralLog.logMessage("Initialized");
         try {
             Thread.sleep(200);
         } catch (InterruptedException e) {
@@ -136,7 +137,7 @@ public final class ColorfulSOMTest extends JFrame implements Runnable, KeyEventD
 
     /** Subroutine for visualizing the random data **/
     private void visualizeRandom(){
-        System.out.println("there");
+        NeuralLog.logMessage("there");
         Graphics g = offScreen.getGraphics();
 
         offScreen.getGraphics().clearRect(0,0,width,height);
@@ -186,7 +187,7 @@ public final class ColorfulSOMTest extends JFrame implements Runnable, KeyEventD
             int bin3 = (int) (randomMtx[i][2] * 255);
             g.setColor(new Color(bin1,bin2,bin3));
             g.fillOval(x,y,5,5);
-            if (i % 50 == 0) System.out.println("Completed "+i*1.0/randomDim*100+"%");
+            if (i % 50 == 0) NeuralLog.logMessage("Completed " + i * 1.0 / randomDim * 100 + "%");
         }
 
         List out = Arrays.asList(setTest.toArray());

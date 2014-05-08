@@ -4,21 +4,24 @@ import Compiler.Scanner.LexerToken;
 import Compiler.Scanner.Scanner;
 import Compiler.Visitor.VisitorToken;
 import GUI.Util.SearchToken;
-import com.sun.javafx.scene.web.skin.HTMLEditorSkin;
+import Neuralizer.IO.NeuralLog;
+import com.sun.webkit.dom.HTMLDocumentImpl;
+import com.sun.webkit.dom.HTMLElementImpl;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.HPos;
-import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
-import javafx.scene.web.HTMLEditor;
+import javafx.scene.web.WebView;
+import jdk.nashorn.api.scripting.JSObject;
+import netscape.javascript.JSException;
+import org.w3c.dom.html.HTMLInputElement;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,12 +31,13 @@ import java.util.List;
  * This class is designed to handle user text input. It allows for rich text
  * visualization with simple text input and transmission.
  */
+
 public abstract class RichTextArea extends TextArea {
 
     private String fgColor = "white";
     private String bgColor  = "#101C2A";
 
-    private final HTMLEditor outputStream;
+    private final WebView outputStream;
     //flags used for linking caret positions
     private boolean toggleCaretValidtor;
     private boolean toggleTextValidator;
@@ -50,6 +54,7 @@ public abstract class RichTextArea extends TextArea {
 
     private final SimpleIntegerProperty numLines;
     private final SimpleIntegerProperty caret;
+    private final int[] caretPositionLiteral = new int[2];
     private SearchToken searchToken = null;
 
     private final ObservableList<VisitorToken> catalog =
@@ -67,7 +72,7 @@ public abstract class RichTextArea extends TextArea {
         numLines = new SimpleIntegerProperty();
         caret = new SimpleIntegerProperty();
         toggleCaretValidtor = toggleSelectionValidator = true;
-        outputStream = new HTMLEditor();
+        outputStream = new WebView();
         tokens = new ArrayList<>();
 
         internal_config();
@@ -80,7 +85,6 @@ public abstract class RichTextArea extends TextArea {
         setOpacity(0.0);
         setWrapText(false);
         setStyle("-fx-font: 11.5px \"Courier New\"");
-        hideToolBars();
     }
 
     /** Returns the property that holds the number of lines in the TextArea
@@ -130,19 +134,13 @@ public abstract class RichTextArea extends TextArea {
 
         });
         //on Scroll Change
-        scrollLeftProperty().addListener((observableValue, number, number2) -> {
-            updateFormatting();
-        });
-        scrollTopProperty().addListener((observableValue, number, number2) -> {
-            updateFormatting();
-        });
+        scrollLeftProperty().addListener((observableValue, number, number2) ->
+                updateFormatting());
+        scrollTopProperty().addListener((observableValue, number, number2) ->
+                updateFormatting());
 
     }
 
-    /** Hides the toolbars from the output **/
-    private void hideToolBars(){
-        outputStream.setSkin(new HTMLSkinWithoutToolbars(outputStream));
-    }
 
     /** Replace HTML tokens
      * @return String the converted value
@@ -151,7 +149,7 @@ public abstract class RichTextArea extends TextArea {
     private String scan(String input){
         //init vars
         StringBuilder outputStream = new StringBuilder(input.length());
-        int index, column;
+        int index, column, indexLag;
         index = column = 0;
         Scanner scanner = new Scanner(input,true);
         LexerToken token;
@@ -172,11 +170,12 @@ public abstract class RichTextArea extends TextArea {
         //loop the stream and modify for HTML formatting
         while ( (token = scanner.getNextToken()).getIds() != LexerToken.TokenIds.EOF ){
             //grab next token, add to token list if appropriate
-            String tokenString = token.getValue();
             if (token.getIds() != LexerToken.TokenIds.COMMENT && token.getIds()
-                != LexerToken.TokenIds.NULL )
-                    getTokens().add(token);
+                    != LexerToken.TokenIds.NULL )
+                getTokens().add(token);
+            String tokenString = token.getValue();
 
+            indexLag = index;
             outputStream.append(getStartModifier(token,index));
 
             for ( int r = 0; r < token.getValue().length(); r++ ){
@@ -202,7 +201,11 @@ public abstract class RichTextArea extends TextArea {
 
                 //handle caret
                 if ( index == getCaretPosition()-1 ){
-                    outputStream.append('|');
+                    caretPositionLiteral[0] = token.getLineNum();
+                    caretPositionLiteral[1] = column;
+//                    this.outputStream.getEngine().executeScript(caretScript);
+
+//                    outputStream.append('|');
                     getCaret().set(column);
                 }
 
@@ -212,11 +215,17 @@ public abstract class RichTextArea extends TextArea {
                 column = c != '\n' ? column + 1 : 0;
                 index++;
             }
-            outputStream.append(getEndModifier(token));
+
+            /** Make an extra token to preserve immutability **/
+            LexerToken adjustedToken = LexerToken.duplicateWithCol(token,column);
+            /*start and end receive same index*/
+            outputStream.append(getEndModifier(adjustedToken,indexLag));
         }
 
         return outputStream.toString();
     }
+
+    private final String caretScript = "window.document;";
 
 
     /** Calls the parser on the most recent scanned tokens, or whatever
@@ -225,6 +234,17 @@ public abstract class RichTextArea extends TextArea {
     */
     protected void handleScannedTokens(){}
 
+    /** Executes the subroutine for handling scanned tokens called by a separate
+     * Thread from the main GUI thread; cannot update any GUI component. Should
+     * be implemented with handleScannedTokens.
+     */
+    public void executeThreadServices(){
+        /*Overriding implementations should
+        * call super or manually ensure that the Thread running them interrupts when
+        * their execution is over.*/
+        //ThreadFactory.interrupt();
+    }
+
     /** Returns the header for the outputStream in html format **/
     private String getHtmlHeader(){
         String output = "";
@@ -232,15 +252,13 @@ public abstract class RichTextArea extends TextArea {
 
         output += "<head><style type=\"text/css\"> " //head
                 + "body{white-space:nowrap; font-size:11.5px; line-height: 125%; }"
-                + "</style>"
-                + "<script> function winScroll(){ window.scrollBy("
+                + "</style><script> function winScroll(){ window.scrollBy("
                 + xyScroll[0] + "," + xyScroll[1] + "); } </script>" //adjust scroll
                 + " </head>"
-                + "<body bgcolor=\""+bgColor+"\" onload =\"winScroll()\">" //body
+                + "<body bgcolor=\""+bgColor+"\" onload =\" winScroll();\">" //body
                 + "<font color=\""+fgColor+"\">"
                 + "<font face=\"Courier New\">"
-                + "</body>";
-
+                + "</body>"; //we're done
         return output;
     }
 
@@ -284,7 +302,7 @@ public abstract class RichTextArea extends TextArea {
                 //step 1 of compilation
                 inputStream = scan(inputStream).replace(
                         "\n", "<br>");
-                outputStream.setHtmlText(inputStream);
+        outputStream.getEngine().loadContent(inputStream);
 
         getNumLines().set(getText().split("\n", -1).length);
     }
@@ -302,9 +320,10 @@ public abstract class RichTextArea extends TextArea {
      * not implement this method; it is not abstract because it is not required by
      * subclasses, rather they may implement it at their leisure.
      * @param token the token to modify
+     * @param index the current index in the inputstream
      * @return the HTML modifier closure
      */
-    public String getEndModifier( LexerToken token ){ return ""; }
+    public String getEndModifier( LexerToken token, int index ){ return ""; }
 
     /** Attempts to update formatting on the textArea. This method can be overwritten
      * to allow for particular actions on changes to the text area, but a call to super
@@ -447,26 +466,6 @@ public abstract class RichTextArea extends TextArea {
         return catalog;
     }
 
-}
 
-/** This internal class is an HTMLEditor without the toolbars
- */
-class HTMLSkinWithoutToolbars extends HTMLEditorSkin{
-
-    private final GridPane grid = (GridPane) getChildren().get(0);
-
-    public HTMLSkinWithoutToolbars(HTMLEditor htmlEditor) throws NullPointerException{
-        super(htmlEditor);
-        //remove the toolbars
-        ((ToolBar)grid.getChildren().get(0)).setMinHeight(0);
-        ((ToolBar)grid.getChildren().get(1)).setMinHeight(0);
-    }
-
-    @Override
-    protected void layoutChildren(final double x, final double y, final double w,
-                                  final double h){
-        //we've removed the call to build the toolbars
-        layoutInArea(grid, x, y, w, h, -1, HPos.CENTER, VPos.CENTER);
-    }
 
 }

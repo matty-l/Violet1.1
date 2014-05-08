@@ -1,5 +1,7 @@
 package Neuralizer.Util;
 
+import Neuralizer.IO.NeuralLog;
+
 /**
  * This class models machine learning using the "delta" rule, &#916 = 2 &#924 x_i (actual - ideal)
  * <br>Created by Matt Levine on 4/13/14.
@@ -22,7 +24,7 @@ public class Delta {
      * on discovered error.
      */
     protected void epoch(){
-        System.out.println("***Beginning Epoch #"+epoch+"***");
+        NeuralLog.logMessage("***Beginning Epoch #" + epoch + "***");
         presentPattern(0,0,1,0);
         presentPattern(0,1,1,0);
         presentPattern(1,0,1,0);
@@ -50,12 +52,12 @@ public class Delta {
         double error, actual, delta;
 
         //run the network as is on training data and calculate error
-        System.out.println("Presented ["+i1+","+i2+","+i3+"]");
+        NeuralLog.logMessage("Presented [" + i1 + "," + i2 + "," + i3 + "]");
         actual = recognize(i1,i2,i3);
         error = getError(actual,anticipated);
-        System.out.println(" anticipated="+anticipated);
-        System.out.println(" actual="+actual);
-        System.out.println(" error="+error);
+        NeuralLog.logMessage(" anticipated=" + anticipated);
+        NeuralLog.logMessage(" actual=" + actual);
+        NeuralLog.logMessage(" error=" + error);
 
         //adjust weights
         delta = trainingFunction(rate, i1, error);

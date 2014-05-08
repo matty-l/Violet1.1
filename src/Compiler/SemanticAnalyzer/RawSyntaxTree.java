@@ -3,6 +3,7 @@ package Compiler.SemanticAnalyzer;
 import Compiler.Nodes.ASTNode;
 import Compiler.Nodes.ASTNodeType;
 import Compiler.Parser.ParserTree.ParserTreeNode;
+import Neuralizer.IO.NeuralLog;
 
 import java.util.*;
 
@@ -81,7 +82,7 @@ public class RawSyntaxTree {
                         {for (int i = 0; i < node.getNumChildren(); i++) add(level+1); }  }});
             StringBuilder s = new StringBuilder();
             for (int i = 0; i < level; i++ ) s.append("  ");
-            System.out.println(s + " " + node.nodeType + " : " + node.getValue()
+            NeuralLog.logMessage(s + " " + node.nodeType + " : " + node.getValue()
                     + " - " + node.treeNode.getValue());
 
         }

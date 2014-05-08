@@ -45,6 +45,18 @@ public final class LexerToken {
         lineNum = colNum = 0;
     }
 
+    /** Returns a copy of the given token but with the given column. Used when
+     * the scanners determination of the column index is not accurate enough, for example,
+     * when tabs need to be taken into consideration.
+     * @param token the token to copy
+     * @param column the new column index
+     * @return the new LexerToken
+     */
+    public static LexerToken duplicateWithCol(LexerToken token, int column) {
+        return new LexerToken(token.ids,token.data,token.text,
+                token.lineNum,column,token.style);
+    }
+
     /** Construct a new CFGToken from a given TokenId and message **/
     public LexerToken(TokenIds tokenIds, String value, String message){
         ids = tokenIds;

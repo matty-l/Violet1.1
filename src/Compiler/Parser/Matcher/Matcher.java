@@ -3,8 +3,7 @@ package Compiler.Parser.Matcher;
 import Compiler.Parser.Builder.*;
 import Compiler.Parser.CFG.*;
 import Compiler.Scanner.LexerToken;
-
-import java.util.ListIterator;
+import Neuralizer.IO.NeuralLog;
 
 /**
  * Verifies that an input of tokens is accepted by the given CFG. A Matcher is immutable.
@@ -19,7 +18,7 @@ import java.util.ListIterator;
  * The algorithm is convenient because it accepts all CFGs (non-LK/LR dependent) and is
  * okay with ambiguities. The matcher passes on ALL discovered derivations of a match
  * to a builder, though most builders would probably only require one. The Matcher should
- * not pass on an empty list to a Parser.Builder.Parser.Builder (null indicates failure), but don't count
+ * not pass on an empty list to a Builder (null indicates failure), but don't count
  * on it.
  *
  * The algorithm should operate in O(n^3) time to the number of CFG rules and linearly
@@ -59,19 +58,25 @@ public final class Matcher {
 
     /** Constructs a new Matcher from a set of CFGTokens and an input rule and
      * attempts to derive the CFGTokens from the rule. Passes on the output
-     * to the given Parser.Builder.Parser.Builder, or null if the derivation fails.
+     * to the given Builder, or null if the derivation fails.
      * @param cfg a Context Free Grammar
      * @param lexerTokens set of input
-     * @param builder a Parser.Builder.Parser.Builder object to operate on the output
+     * @param builder a Builder object to operate on the output
      */
     public Matcher (ContextFreeGrammar cfg, LexerToken[] lexerTokens, Builder builder){
-        State state = parse(cfg.getStartRule(), lexerTokens);
-        if (state == null){
+        State returnResult = parse(cfg.getStartRule(), lexerTokens);
+        if (returnResult == null){
             matches = false;
             return;
         }
+
         matches = true;
-        builder.build(state);
+//        NeuralLog.logMessage("trying to build\n\n\n");
+        builder.build(returnResult);
+//        builder.getTreeHead().print(0);
+//        NeuralLog.logMessage("Size is: " + builder.getTreeHead().size());
+//        NeuralLog.logMessage("\n\nDone building");
+//        System.exit(1);
     }
 
     /** Returns true if and only if the derivation was matched
@@ -118,7 +123,7 @@ public final class Matcher {
 
             if (! (term instanceof Rule) ) continue;
             if (term.getName().equals(state.name)){
-                chartRow.add(st.getDotIncrementedState(st.production));
+                chartRow.add(st.getDotIncrementedState(st.getProduction()));
             }
         }
     }
@@ -158,18 +163,18 @@ public final class Matcher {
         //validate we've returned the pivot properly
 
         for (State state : table.get(table.size() - 1)) {
-            if (state.name.equals("GAMMA_RULE") && state.completed())
+            if (state.name.equals("GAMMA_RULE") && state.completed()) {
                 return state;
+            }
         }
 
         //figure out the bad token
         int indexOfBadToken = table.indexOf(lastRow)+1;
         if (indexOfBadToken < table.size())
             badToken = table.get(indexOfBadToken).getCFGToken();
-
         return null;
     }
-
+      
     /** Returns the "bad" token, or the first token that the Parser couldn't match.
      * Returns null if there was no such token
      * @return the bad token

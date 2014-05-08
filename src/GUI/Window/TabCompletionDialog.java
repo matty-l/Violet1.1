@@ -124,11 +124,12 @@ public class TabCompletionDialog {
         double fontsize = 11.5;
         double scrlY = textArea.getScrollTop()/1.008;
         double dScreenHeight = ((StackPane)textArea.getParent()).getHeight() - 664.0;
+
         return new double[]{
                 (int) (-fontsize+0.9*((wordPosition[0]*fontsize/12.0+1)*8+22.5-
                         textArea.getScrollLeft()*1.11)),
                 ( (StackPane)textArea.getParent()).getMaxHeight()
-                        +(wordPosition[1]*fontsize*1.13)-620-scrlY-dScreenHeight //the ypos
+                        +(wordPosition[1]*fontsize*1.3)-650-scrlY-dScreenHeight //the ypos
         };
     }
 

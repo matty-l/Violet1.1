@@ -4,6 +4,7 @@ import Compiler.Nodes.ASTNodeTypeJava7;
 import Compiler.Parser.Builder.ASTBuilder;
 import Compiler.Parser.CFG.ContextFreeGrammar;
 import Compiler.Parser.LanguageSource.JavaGrammar;
+import Compiler.Parser.Matcher.Matcher;
 import Compiler.Parser.ParserTree.ParserTreeNode;
 import Compiler.Scanner.LexerToken;
 import Compiler.Scanner.Scanner;
@@ -16,9 +17,7 @@ import Neuralizer.Util.NeuralErrorWin;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.SimpleBooleanProperty;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -27,12 +26,14 @@ import java.util.Stack;
 import java.util.stream.DoubleStream;
 
 /**
+ * This class builds the Neural network from built-in Java classes. Since this is a
+ * use-once-and-dump program, its code is not intended to be remarkably beautiful,
+ * but functional and easily managed.
  * Created by Matt Levine on 4/20/14.
  */
-public class NeuralIO {
+public class NeuralIOTrainer {
 
     private final String path = "C:\\Users\\Matt Levine\\Desktop\\Java Source";
-    private final File directory;
     private ContextFreeGrammar grammar = JavaGrammar.getJavaGrammar();
 
     private final NeuralErrorWin errorWindow;
@@ -40,14 +41,37 @@ public class NeuralIO {
     private final SimpleBooleanProperty sflag = new SimpleBooleanProperty(false);
     private int step = 0;
     private long lastTime;
+    private final long startTime;
     private boolean stop = false;
 
     private final ArrayList<Matrix> trainingSet = new ArrayList<>();
-    private final int NUM_ITERATIONS = 10;
+    private final int NUM_ITERATIONS = 100;
+    private final int num_training_input;
 
+    private PrintWriter output = null;
 
-    public NeuralIO(){
-        errorWindow = new NeuralErrorWin("Error",400,550,cflag,sflag);
+    /** This is where we write out output to **/
+    {
+        try {
+             output = new PrintWriter("brain.brn","UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            report(Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    /** Instantiates a new NeuralIOTrainer. The interface can be a little jumpy or buggy if
+     * run over the entire program; it's used for debugging or getting a sense of
+     * execution, not if you want to run the whole IO process.
+     * @param withInterface if true, includes the interface
+     * @param num_training_inputs the number of training inputs to terminate after
+     */
+    public NeuralIOTrainer(boolean withInterface, int num_training_inputs){
+        if (withInterface)
+            errorWindow = new NeuralErrorWin("Error",400,550,cflag,sflag);
+        else errorWindow = null;
+        this.num_training_input = num_training_inputs;
+        startTime = System.nanoTime();
+
         report("Starting Neuralization");
 
         cflag.addListener((observableValue, aBoolean, aBoolean2) -> {
@@ -64,34 +88,45 @@ public class NeuralIO {
 
                     for (int i = 0; i < trainingSet.size(); i++){
                         if (DoubleStream.of(trainingSet.get(i).toPackedArray()).sum() != 0) {
+                            if (i >= input.length)
+                                break;
                             input[i] = trainingSet.get(i).toPackedArray();
                             nonNullSize++;
-                            System.out.println("G: "+DoubleStream.of(trainingSet.get(i).toPackedArray()).sum());
                         }
                     }
 
                     double[][] trainingInput = new double[nonNullSize][input[0].length];
                     System.arraycopy(input, 0, trainingInput, 0, nonNullSize);
 
-                    map = new SelfOrganizingMap(nonNullSize, nonNullSize,
+                    map = new SelfOrganizingMap(input[0].length, nonNullSize,
                             NormalizeInput.NormalizationType.MULTIPLICATIVE);
 
                     trainer = new TrainSelfOrganizingMap(map,trainingInput,
                             TrainSelfOrganizingMap.LearningMethod.ADDITIVE,0.5);
+                    trainer.initialize();
+
                     for (int i = 0; i < NUM_ITERATIONS; i++){
+                        NeuralLog.logMessage("Reached iteration "+i+"...");
                         trainer.iteration();
                     }
                 }
                 stop = true;
                 report("Scanning Stopped By User");
-                System.out.println(map == null ? null : map.getOutputWeights());
+                if (output != null) {
+                    NeuralLog.logMessage("Writing to file...");
+                    output.println(map == null ? null : map.getOutputWeights().dim());
+                    output.println(map == null ? null : map.getOutputWeights().toString());
+                    output.close();
+                    NeuralLog.logMessage("Done. Elapsed time: " + (System.nanoTime() - this.startTime) / 10e8);
+                    System.exit(1);
+                }
             }
         });
 
-        directory = new File(path);
+        File directory = new File(path);
         if (!directory.canRead() || !directory.isDirectory()){
-            report("NeuralIO Instantiation Error (1" +
-                    "): \n\tCannot " + "use NeuralIO without" + " local source directory");
+            report("NeuralIOTrainer Instantiation Error (1" +
+                    "): \n\tCannot " + "use NeuralIOTrainer without" + " local source directory");
             return;
         }
 
@@ -111,7 +146,9 @@ public class NeuralIO {
         read(directory.listFiles());
     }
 
-
+    /** Reads in a file from memory
+     * @param input the file to read
+     */
     private void read(File input){
 
         if (stop) return;
@@ -130,8 +167,8 @@ public class NeuralIO {
                     stringBuilder.append(line).append("\n");
             }catch (IOException ioe){
                 report("Throwing IOException");
-                report("NeuralIO Instantiation Error (2" +
-                        "): \n\tCannot " + "use NeuralIO without" + " local source directory");
+                report("NeuralIOTrainer Instantiation Error (2" +
+                        "): \n\tCannot " + "use NeuralIOTrainer without" + " local source directory");
             }
 
             try {
@@ -166,7 +203,14 @@ public class NeuralIO {
         }
     }
 
-    private void scanAndParse(StringBuilder stringBuilder,String filename) throws InterruptedException {
+    /**
+     * Scans a parses a file by the given name
+     * @param stringBuilder the builder in which to write information
+     * @param filename the name of the file
+     * @throws InterruptedException if the thread running the process is interrupted
+     */
+    private void scanAndParse(final StringBuilder stringBuilder, final String filename)
+            throws InterruptedException {
         if (stop) return;
         report("Scanning " + filename + " : (" + stringBuilder.length() + ")");
         Scanner scanner = new Scanner(stringBuilder.toString(),false);
@@ -179,15 +223,18 @@ public class NeuralIO {
         ASTBuilder builder = new ASTBuilder();
 
         report("Building (1) " + filename);
-        Thread t1 = new Thread(()->{grammar.matches(
-                tokens.toArray(new LexerToken[tokens.size()]), builder);
+        Matcher m;
+        Thread t1 = new Thread(()->{
+            threadedMatcherSubroutine(tokens, builder);
         });
         t1.start();
-        long startTime = System.nanoTime();
+        final long startTime = System.nanoTime();
         while (t1.isAlive()){
-            if (System.nanoTime()-startTime > 5e9){
-                report("Thread Err: Aborted " + filename);
-                t1.interrupt();
+            if (System.nanoTime()-startTime > 15e9){
+                report("Thread Timeout: Aborted " + filename);
+                NeuralLog.logMessage("Thread Err: Aborted " + filename);
+                /* It's deprecated but I'm not going to get deadlock so not worried */
+                t1.stop();
                 return;
             }
             Thread.sleep(100);
@@ -196,7 +243,6 @@ public class NeuralIO {
         report("Matched " + filename);
         if (builder.getTreeHead() != null){
             report("Building (2) " + filename);
-
 
             Thread t2 = new Thread(()->{buildNeurlizerTree(builder.getTreeHead(),ASTNodeTypeJava7.class);});
             t2.start();
@@ -207,25 +253,49 @@ public class NeuralIO {
             Matrix flat = neuralizerTree.flatten();
 
             report("Parsed: " + step);
-            System.out.println(step);
+            double averageScanTime = (double)(System.nanoTime() - this.startTime) / 10e8 / step;
+            NeuralLog.logMessage("Completed " + filename + " file #" + step +
+                    ". Average Processing time: " + averageScanTime);
             trainingSet.add(flat);
             step++;
+            if (step >= num_training_input) sflag.set(true);
 
             report(flat.toString());
+        }else{
+            NeuralLog.logMessage("Parser Err: Failed to Match: "+filename + " at token "+
+                matcher.getBadToken().getValue() + " on line "+
+                    matcher.getBadToken().getLineNum() + " at column " +
+                    matcher.getBadToken().getColNum());
         }
+    }
+
+    private Matcher matcher;
+
+    private void threadedMatcherSubroutine(ArrayList<LexerToken> tokens, ASTBuilder builder) {
+        matcher = grammar.matches(
+                tokens.toArray(new LexerToken[tokens.size()]), builder);
     }
 
     NeuralizerTree lastTree = null;
 
+    /** Builds the neural tree
+     * @param node the node of the tree
+     * @param c the class to build
+     */
     private void buildNeurlizerTree(ParserTreeNode node, Class c){
         if (stop) return;
         lastTree = new NeuralizerTree(node,c);
     }
 
+    /** Reports somtheing to the interface, if in that mode
+     * @param nErr the error to report
+     */
     private void report(final String nErr){
-        errorWindow.mutate(nErr);
-        errorWindow.show();
-        errorWindow.centerOnScreen();
+        if (errorWindow != null) {
+            errorWindow.mutate(nErr);
+            errorWindow.show();
+            errorWindow.centerOnScreen();
+        }
     }
 
 }

@@ -4,15 +4,18 @@ import Compiler.Nodes.ASTNode;
 import Compiler.Visitor.Java7.Java7Visitor;
 import Neuralizer.Structure.Matrix;
 
+import java.util.stream.DoubleStream;
+
 /**
  * This visitor assists in the flattening of Parse Trees
  * for conversion into a SOM readable format.
  * Created by Matt Levine on 4/20/14.
  */
-public class TreeFlattenVisitor extends Java7Visitor{
+public final class TreeFlattenVisitor extends Java7Visitor{
 
     private int numFields = 0;
-    private int numMethods = 0;
+    /** Double because used to normalize **/
+    private double numMethods = 0;
     private int numConditionals = 0;
     private int numForLoops = 0;
     private int numWhileLoops = 0;
@@ -30,14 +33,17 @@ public class TreeFlattenVisitor extends Java7Visitor{
     private int numArguments = 0;
     private int numFormals = 0;
 
-    private final ASTNode root;
+    /** Convenience field for back-mapping an index to a property **/
+    public final static String[] orderedStatementList = {"Fields","Methods","Conditionals",
+        "For-Loops","While-Loops","Case-Statements","Do-Statements","Literals","Identifiers",
+        "Assignments","Variable-Initializations","Enums","Classes","Types",
+        "Array-Initializations","Try-Statements","Arguments","Formals"};
 
-    /** Generates a new flatten visitor from a given root node
-     * @param root the root node
-     */
-    public TreeFlattenVisitor(ASTNode root) {
-        this.root = root;
-    }
+    /** Convenience field for knowing the size of the flattened vector that represents
+     * a Class. Obviously, this must be manually updated should that vector size change.
+     * or else it won't be very useful.
+    */
+    public static final int size_of_flattened_vector = 18;
 
     /** Returns a representative matrix of the root, simple summation of quantity of important
      * features. Guaranteed to be the same when called multiple times, or when called from separate
@@ -45,13 +51,16 @@ public class TreeFlattenVisitor extends Java7Visitor{
      * and mathematical veracity.
      * @return a representative matrix.
      */
-    public Matrix getMatrixForm(){
+    public Matrix getMatrixForm(ASTNode root){
         reset();
         root.accept(this);
-        final double[][] summary = {{numFields,numMethods,numConditionals,numForLoops,
-                numWhileLoops,numCaseStatements,numDoStatements,numLiterals,numIdentifiers,
-                numAssignments,numVariableInits,numEnums,numClasses,numTypes,numArrayInits,
-                numTrys,numArguments,numFormals}};
+        final double[][] summary = {{numFields,numMethods,numConditionals/numMethods,
+                numForLoops/numMethods,numWhileLoops/numMethods
+                ,numCaseStatements/numMethods,numDoStatements/numMethods,numLiterals/numMethods,
+                numIdentifiers/numMethods,numAssignments/numMethods,
+                numVariableInits/numMethods,
+                numEnums,numClasses,numTypes,numArrayInits/numMethods,
+                numTrys/numMethods,numArguments/numMethods,numFormals/numMethods}};
         for (int i = 0; i < summary[0].length; i++)
             summary[0][i] = summary[0][i] == 0 ? 0 : 1.0/summary[0][i];
         return new Matrix(summary);
@@ -59,7 +68,8 @@ public class TreeFlattenVisitor extends Java7Visitor{
 
     /** Resets all fields to 0 **/
     private void reset(){
-        numFields = numMethods = numConditionals = numForLoops = numWhileLoops
+        numMethods = 0;
+        numFields = numConditionals = numForLoops = numWhileLoops
                 = numCaseStatements = numDoStatements = numLiterals = numIdentifiers
                 = numAssignments = numVariableInits = numEnums = numClasses
                 = numTypes = numArrayInits = numTrys = numArguments =
@@ -154,6 +164,14 @@ public class TreeFlattenVisitor extends Java7Visitor{
     @Override public Object visitFormalParameterDecls(ASTNode node){
         numFormals++;
         return super.visitFormalParameterDecls(node);
+    }
+
+    /** Reverses the flattening of an array, returning the result
+     * @param vector the input array
+     * @return the output array
+     */
+    public static double[] reverseFlattenArray(double[] vector){
+        return DoubleStream.of(vector).map(d->(d==0?0:1/d)).toArray();
     }
 
 }

@@ -1,16 +1,8 @@
 package Neuralizer;
 
-import GUI.DesktopController;
-import GUI.Util.GuiLinkageManager;
-import GUI.Window.Utility.UtilWindow;
-import Neuralizer.IO.NeuralIO;
-import Neuralizer.Util.NeuralErrorWin;
+import Neuralizer.IO.NeuralIOTrainer;
+import Neuralizer.IO.NeuralLog;
 import javafx.application.Application;
-import javafx.geometry.NodeOrientation;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 /**
@@ -19,18 +11,27 @@ import javafx.stage.Stage;
  */
 public class Main extends Application{
 
+    private static boolean withInterface;
+    private static int num_training_inputs;
 
     public static void main(String[] args){
-        System.out.println("Neuralizing...");
+        if (args.length != 2){
+            throw new RuntimeException("Program requires exactly 1 boolean argument" +
+                    " followed by exactly 1 integer argument.");
+        }
+        withInterface = Boolean.valueOf(args[0]);
+        num_training_inputs = Integer.valueOf(args[1]);
+
+       NeuralLog.logMessage("Neuralizing...");
         launch(args);
-        System.out.println("Program Terminated Safely.");
+        NeuralLog.logMessage("Program Terminated Safely.");
     }
 
     @Override
     /** Starts the GUI element **/
     public void start(Stage stage){
 
-        NeuralIO io = new NeuralIO();
+        new NeuralIOTrainer(withInterface, num_training_inputs);
 
     }
 

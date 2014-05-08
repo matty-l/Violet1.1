@@ -1,5 +1,6 @@
 import GUI.DesktopController;
 import GUI.Util.GuiLinkageManager;
+import Neuralizer.IO.NeuralLog;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -14,12 +15,9 @@ import java.util.stream.DoubleStream;
 public class Main extends Application{
 
     public static void main(String[] args) throws FileNotFoundException {
-//        PrintStream errorReDirection = new PrintStream("C:\\Users\\Matt Levine\\Desktop\\log.txt");
-//        System.setOut(errorReDirection);
-
-        System.out.println("Running...");
+        NeuralLog.logMessage("Running...");
         launch(args);
-        System.out.println("Program Terminated Safely.");
+        NeuralLog.logMessage("Program Terminated Safely.");
     }
 
     @Override

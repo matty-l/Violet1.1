@@ -1,5 +1,8 @@
 package GUI.Widget;
 
+import Compiler.Parser.Builder.ASTBuilderTomita;
+import Compiler.Parser.Builder.ASTQuickBuilder;
+import Compiler.Parser.Builder.Builder;
 import Compiler.SemanticAnalyzer.ClassTree.ClassTree;
 import Compiler.SemanticAnalyzer.ClassTreeDecorator;
 import Compiler.SemanticAnalyzer.RawSyntaxTree;
@@ -19,8 +22,16 @@ import GUI.Util.SearchManager;
 import GUI.Util.SearchToken;
 import GUI.Window.TabCompletionDialog;
 import GUI.Window.TabCompletionDialog.CompletionToken;
+import Neuralizer.IO.NeuralLog;
+import Neuralizer.Network.SelfOrganizingMap;
+import Neuralizer.Structure.Matrix;
+import Neuralizer.Util.DifferenceVisualizer;
+import Neuralizer.Util.TreeFlattenVisitor;
+import Util.ThreadFactory;
+import javafx.scene.input.KeyCode;
 
 import java.util.*;
+import java.util.stream.DoubleStream;
 
 /**
  * Author: Matt
@@ -31,9 +42,8 @@ import java.util.*;
 public final class SmartRichTextArea extends RichTextArea {
 
     private boolean isSaved,foundField,foundSearch;
-    private boolean threadNet = true;
     private ContextFreeGrammar grammar;
-    private ASTBuilder lastBuilder;
+    private Builder lastBuilder;
     private String replaceText = "";
     private RawSyntaxTree lastTree = null;
 
@@ -58,6 +68,7 @@ public final class SmartRichTextArea extends RichTextArea {
      */
     private boolean isField(LexerToken token){
         for (int i = 0; i < fieldNodes.size(); i++){
+            /*Do not use for-each; thread problems*/
             ParserTreeNode treeNode = fieldNodes.get(i);
             CFGToken tok = treeNode.value.getEnd_chartRow().getCFGToken();
             if (token.getValue().equals(tok.getValue()) && token.getColNum() == tok.getColNum() &&
@@ -93,10 +104,6 @@ public final class SmartRichTextArea extends RichTextArea {
         if (index < markedCaretPosition ){
             yieldedToken = token;
         }
-
-        int locale = getCaretPosition() - index - token.getValue().length();
-//        System.out.println(token.getValue() + " -- " + locale);
-        openCompletionDialog(token, locale == 0);
 
         if (attemptCompletion(token, index)) return "";
 
@@ -211,9 +218,16 @@ public final class SmartRichTextArea extends RichTextArea {
         return false;
     }
 
-    /** Returns the associated end tag for a keyword, else empty string. **/
+    /** Returns the associated end tag for a keyword, else empty string.
+     * @param token the token to modify
+     * @param index the current index in the inputstream
+     * @return stylization
+     */
     @Override
-    public String getEndModifier(LexerToken token ){
+    public String getEndModifier(LexerToken token, int index ){
+
+        int locale = getCaretPosition() - index - token.getValue().length();
+        openCompletionDialog(token, locale == 0);
 
         if (!foundSearch) {
             foundSearch = true;
@@ -252,7 +266,7 @@ public final class SmartRichTextArea extends RichTextArea {
     /** Handles the Raw Tree
      * @param buidler builder to assist in handling the tree
      */
-    void handleRawAST(ASTBuilder buidler){
+    private void handleRawAST(Builder buidler){
         Class type = classMap.get(getGrammar());
         lastTree = new RawSyntaxTree(buidler.getTreeHead(),type);
         classTree = new ClassTree();
@@ -271,32 +285,13 @@ public final class SmartRichTextArea extends RichTextArea {
         isSaved = false;
     }
 
+    /** Runs the parser and sematic analyzer on separate thread, updates messages
+     * on GUI
+     */
     @Override protected void handleScannedTokens(){
         markSubroutineIncomplete();
-        ASTBuilder builder = new ASTBuilder();
 
-        if (threadNet) {
-            threadNet = false;
-            new Thread(() -> {
-                Matcher m = getGrammar().matches(
-                        getTokens().toArray(new LexerToken[getTokens().size()]), builder);
-
-                if (m.matches() && getOverflowValue() == -1) {
-                    handleRawAST(builder);
-                    lastBuilder = builder; //primarily for testing
-                } else if (!m.matches() && m.getBadToken() != null) {
-                    getCatalog().add(new VisitorToken(m.getBadToken().getLineNum(),
-                            "Parser Error: Cannot resolve token \"" +
-                                    m.getBadToken().getValue() + "\" on line " +
-                                    m.getBadToken().getLineNum() + " in column "
-                                    + m.getBadToken().getColNum()));
-                }
-                markSubroutineComplete();
-                threadNet = true;
-            }).start();
-        }else {
-            return;
-        }
+        ThreadFactory.forceUpdate(this);
 
         //Updates messages - FIXME add them all or more of them or something
 
@@ -312,6 +307,31 @@ public final class SmartRichTextArea extends RichTextArea {
         getNumLines().set(getNumLines().get() + 1);
         getNumLines().set(getNumLines().get() - 1);
     }
+
+    /** Subroutine for handling tokens
+     */
+    @Override
+    public final void executeThreadServices() {
+        Builder builder = new ASTBuilder();
+        Matcher m = getGrammar().matches(
+                getTokens().toArray(new LexerToken[getTokens().size()]), builder);
+//        builder.getTreeHead().print(0);
+//        NeuralLog.logMessage(builder.getTreeHead().size() + " IS THE SIZE ");
+
+        if (m.matches() && getOverflowValue() == -1) {
+            handleRawAST(builder);
+            lastBuilder = builder; //primarily for testing
+        } else if (!m.matches() && m.getBadToken() != null) {
+            getCatalog().add(new VisitorToken(m.getBadToken().getLineNum(),
+                    "Parser Error: Cannot resolve token \"" +
+                            m.getBadToken().getValue() + "\" on line " +
+                            m.getBadToken().getLineNum() + " in column "
+                            + m.getBadToken().getColNum()));
+        }
+
+        markSubroutineComplete();
+    }
+
     @Override
     /** Highlights all matching phrases
      * @param token the token to search for
@@ -395,5 +415,37 @@ public final class SmartRichTextArea extends RichTextArea {
         updateFormatting();
         completionToken = null;
         updateFormatting();
+    }
+
+    private final TreeFlattenVisitor treeFlattenVisitor = new TreeFlattenVisitor();
+
+    /** Configures use of the statistics dialog
+     * @param network the neural network to derive statistics from
+     */
+    public void enableStatistics(SelfOrganizingMap network,
+                                 DifferenceVisualizer visualizer) {
+        //fixme: listeners shouldn't be in this class
+        setOnKeyPressed(keyEvent -> {
+            if (keyEvent.isControlDown() && keyEvent.getCode().equals(KeyCode.G) &&
+                    lastTree != null){
+                Matrix matrixForm = treeFlattenVisitor.getMatrixForm(lastTree.getRoot());
+
+                double[] vectorForm = matrixForm.toPackedArray();
+
+                if (network == null) return;
+                int win = network.winner(vectorForm);
+                double[] idealRow = network.getOutputWeights().getRow(win).toPackedArray();
+                double[] differences = new double[vectorForm.length];
+
+                for (int i = 0; i < vectorForm.length; i++)
+                    differences[i] = idealRow[i] - vectorForm[i];
+                differences = TreeFlattenVisitor.reverseFlattenArray(differences);
+
+                visualizer.show();
+                visualizer.displayVector(differences);
+                visualizer.centerOnScreen();
+
+            }
+        });
     }
 }

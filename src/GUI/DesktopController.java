@@ -4,9 +4,11 @@ import Compiler.Parser.CFG.ContextFreeGrammar;
 import GUI.Widget.DirectoryPanel;
 import GUI.Window.GuiWindow;
 import GUI.Window.Utility.SettingsDialog;
+import GUI.Window.Utility.UtilWindow;
 import IO.IOManager;
 import IO.JavaCompiler;
 import IO.PreferenceManager;
+import Neuralizer.IO.NeuralLog;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.EventHandler;
@@ -32,14 +34,17 @@ public class DesktopController {
     private final PreferenceManager preferences;
     private long lastTime = 0;
     /** The number of seconds in between background delay **/
-    private long num_delay_seconds_tenths = 15;
+    private final static long num_delay_seconds_tenths = 15;
     /** The preference window **/
     private final SettingsDialog settingsDialog;
+    /** The Thread running the GUI **/
+    private static Thread FXThread;
 
     /**Constructs a new GUI.DesktopController. Defaults state to active.
      * @param stage The stage of the DesktopController
     **/
     public DesktopController(Stage stage){
+        FXThread = Thread.currentThread();
         window = new GuiWindow(1200,750);
         window.show(stage);
 
@@ -174,7 +179,8 @@ public class DesktopController {
                 //noinspection FinalizeCalledExplicitly
                 preferences.finalize();
             }catch(Throwable fthrowable){
-                System.out.println("Internal Err: unable to finalize preferences");
+                NeuralLog.logMessage("Internal Err: unable to finalize preferences");
+                NeuralLog.logError(fthrowable,Thread.currentThread());
             }
         });
 
@@ -249,9 +255,12 @@ public class DesktopController {
     /** Shows the finder dialog **/
     public void showFinderDialog() { window.showFinderDialog(); }
 
-    /** Sets the minmum delay for the background refresh items
-     * @param delay the minimum delay
+    /** Return the minmum delay for the background refresh items
+     * @return delay the minimum delay
      */
-    public final void setBackgroundDelay(long delay){ num_delay_seconds_tenths = delay;}
+    public static long getBackgroundDelay(){ return num_delay_seconds_tenths;}
+
+    /** Returns the Thread running the GUI **/
+    public static Thread getFXThread(){return FXThread;}
 
 }

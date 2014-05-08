@@ -2,6 +2,8 @@ package IO;
 
 
 
+import Neuralizer.IO.NeuralLog;
+
 import java.io.*;
 
 /**
@@ -57,12 +59,12 @@ public class IOManager {
                 try{
                     text = text.substring(0,text.length()-1); //strip last \n
                 }catch(StringIndexOutOfBoundsException sieobe){ //shouldn't be caught
-                    System.out.println("Unexpected Loading Err:" +sieobe+".\nMay indicate systemic problem.");
-                    sieobe.printStackTrace();
+                    NeuralLog.logMessage("Unexpected Loading Err:" + sieobe + ".\nMay indicate systemic problem.");
+                    NeuralLog.logError(sieobe,Thread.currentThread());
                 }
-            }catch(IOException e){ System.out.println("File Failed to Load "+file); }
+            }catch(IOException e){ NeuralLog.logMessage("File Failed to Load "+file); }
             finally{ try{reader.close();} catch(IOException e2){
-                System.out.println("Err: File in use.");}
+                NeuralLog.logMessage("Err: File in use.");}
             }
         }
         return text;

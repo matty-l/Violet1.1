@@ -3,9 +3,7 @@ package Compiler.Parser.Matcher;
 import Compiler.Parser.CFG.CFGToken;
 import Compiler.Scanner.LexerToken;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.ListIterator;
+import java.util.*;
 
 /**
  * Represents one column in a Chart, a standard State storage unit.
@@ -72,12 +70,24 @@ public class ChartRow implements Iterable<State> {
         return false;
     }
 
+    /** Reverses the states in the row **/
+    public void reverse(){
+        Collections.reverse(states);
+    }
+
+    /** Adds all states to a given collection
+     * @param collection the collection
+     */
+    public void addToCollection(Collection<State> collection){
+        collection.addAll(states);
+    }
+
     /** Returns string representation of ChartRow
      * @return string representation of chartrow
      */
     @Override
     public String toString(){
-        return ""+index;
+        return ""+states;
     }
 
 }

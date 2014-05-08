@@ -6,18 +6,19 @@ import Compiler.Visitor.Java7.RefactorVisitor;
 import GUI.Util.SearchManager;
 import GUI.Util.SearchToken;
 import GUI.Widget.OutputGUI;
-import GUI.Widget.RichTextArea;
 import GUI.Widget.SmartRichTextArea;
 import GUI.Widget.CompilerBar;
 import GUI.Widget.DirectoryPanel;
 import GUI.Window.Utility.FinderDialog;
 import GUI.Window.Utility.RefactorDialog;
+import IO.PreferenceManager;
+import Neuralizer.IO.NeuralPreferences;
+import Neuralizer.Network.SelfOrganizingMap;
+import Neuralizer.Util.DifferenceVisualizer;
 import Util.FunctionMapProxy;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -57,6 +58,7 @@ public class GuiWindow{
     private boolean parse = true;
 
     private FunctionMapProxy<String> functionMapProxy;
+    private Menu colLabelMenu;
 
     /** Contstructs a new GUIWindow of the given dimensionality
      *
@@ -78,8 +80,9 @@ public class GuiWindow{
         root = new BorderPane();
         primaryStage.setScene(new Scene(root,width,length));
 
-        //embellish
+        //embellish (order matters)
         buildDialogs(primaryStage);
+        configureStatistics(); //fixme: does this really go in this class?
         buildTextArea();
         buildBottomPanel();
         setCloseConditions();
@@ -93,6 +96,7 @@ public class GuiWindow{
         primaryStage.sizeToScene();
         primaryStage.show();
     }
+
 
     /** Builds the dialogs
      * @param primaryStage the parent stage
@@ -118,18 +122,10 @@ public class GuiWindow{
         HBox offset = new HBox();
         HBox.setHgrow(menuBar, Priority.ALWAYS);
         MenuBar colLabel = new MenuBar();
-        final Menu colLabelMenu = new Menu("Col:      ");
+        colLabelMenu = new Menu("Col:      ");
         colLabelMenu.setDisable(true);
         colLabel.getMenus().add(colLabelMenu);
         offset.getChildren().addAll(menuBar,colLabel);
-
-        //update column when relevant, requires ugly delay to wait for listener threads
-        textArea.caretPositionProperty().addListener((observableValue, number, number2) -> {
-            Timeline updateColsLine = new Timeline(new KeyFrame(Duration.millis(5),
-                    event -> colLabelMenu.setText("Col:    " + textArea.getCaret().get())));
-            updateColsLine.setCycleCount(1);
-            updateColsLine.play();
-        });
 
         //Add menus to bar
         root.setTop(offset);
@@ -143,6 +139,8 @@ public class GuiWindow{
         textArea = new SmartRichTextArea();
         textArea.setOnMouseClicked(event -> { finderDialog.hide(); refactorDialog.hide();  });
         enableRefactoring(textArea);
+        enableColumnAdjustment(textArea);
+        enableStatistics(textArea);
         BorderPane centerFrame = new BorderPane();
         TabPane mainFrame = new TabPane();
         Tab tab = new Tab("        ");
@@ -154,6 +152,19 @@ public class GuiWindow{
         textArea.addToTab(tab);
         root.setCenter(centerFrame);
         configureTab(tab,textArea);
+    }
+
+    /** Configures the column button to be updated on column changes in this region
+     * @param textArea the RichTextArea
+     */
+    private void enableColumnAdjustment(SmartRichTextArea textArea) {
+        //update column when relevant, requires ugly delay to wait for listener threads
+        textArea.caretPositionProperty().addListener((observableValue, number, number2) -> {
+            Timeline updateColsLine = new Timeline(new KeyFrame(Duration.millis(5),
+                    event -> colLabelMenu.setText("Col:    " + textArea.getCaret().get())));
+            updateColsLine.setCycleCount(1);
+            updateColsLine.play();
+        });
     }
 
     /** Constructs the line number bar **/
@@ -378,6 +389,8 @@ public class GuiWindow{
         //add text area
         SmartRichTextArea newTextArea = new SmartRichTextArea();
         enableRefactoring(newTextArea);
+        enableColumnAdjustment(newTextArea);
+        enableStatistics(newTextArea);
         newTextArea.addToTab(tab);
 
         configureTab(tab, newTextArea);
@@ -600,10 +613,29 @@ public class GuiWindow{
     }
 
 
+    /** Runs replace over hte token with the word
+     * @param searchToken the token to search for
+     * @param replaceWord the word to replace it with
+     */
     public void replace(SearchToken searchToken, String replaceWord) {
         textArea.replaceSelectionDynamic(replaceWord,searchToken);
         SearchManager.lastSelected = null;
         textArea.updateFormatting();
+    }
+
+    private final NeuralPreferences neuralLoader = new NeuralPreferences();
+    private final DifferenceVisualizer visualizer = new DifferenceVisualizer();
+
+    /** Configures statistics for the window and its sub-widgets. **/
+    private void configureStatistics() {
+        neuralLoader.loadSOMFromMemory();
+    }
+
+    /** Enables statistics for the given text area
+     * @param textArea the text area
+     */
+    private void enableStatistics(SmartRichTextArea textArea){
+        textArea.enableStatistics(neuralLoader.getNetwork(),visualizer);
     }
 
 }

@@ -49,6 +49,9 @@ public enum ASTNodeTypeJava7 implements ASTNodeType{
     TypeParameters{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitTypeParameters(node);}},
 
+    TypeParameter{@Override public Object accept(Visitor v, ASTNode node){
+        return ((Java7Visitor)v).visitTypeParameter(node);}},
+
     Bound{@Override public Object accept(Visitor v, ASTNode node){
         return ((Java7Visitor)v).visitBound(node);}},
 

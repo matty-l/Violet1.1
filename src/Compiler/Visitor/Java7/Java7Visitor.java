@@ -20,6 +20,7 @@ public abstract class Java7Visitor extends Visitor {
     public Object visitTypeArguments(ASTNode node){return defaultVisit(node);}
     public Object visitNonWildcardTypeArguments(ASTNode node){return defaultVisit(node);}
     public Object visitTypeParameters(ASTNode node){return defaultVisit(node);}
+    public Object visitTypeParameter(ASTNode node) {return defaultVisit(node);}
     public Object visitBound(ASTNode node){return defaultVisit(node);}
     public Object visitModifier(ASTNode node){return defaultVisit(node);}
     public Object visitAnnotations(ASTNode node){return defaultVisit(node);}
@@ -71,7 +72,5 @@ public abstract class Java7Visitor extends Visitor {
     public Object visitTerminal(ASTNode node){
         return node.treeNode.value.getEnd_chartRow().getCFGToken().getValue();
     }
-
-
 
 }

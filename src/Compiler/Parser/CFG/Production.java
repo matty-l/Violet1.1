@@ -1,7 +1,11 @@
 package Compiler.Parser.CFG;
 
+import Compiler.Parser.Matcher.State;
+import Neuralizer.IO.NeuralLog;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 
 /**
@@ -66,5 +70,16 @@ public final class Production implements Iterable<Termable> {
         StringBuilder s = new StringBuilder();
         for (Termable t : terms) s.append(t.getName()).append(" ");
         return s.length() > 0 ? s.toString().substring(0,s.length()-1) : s.toString();
+    }
+
+    /** Returns true if the row contains the state
+     * @param state the state
+     * @return true if contained
+     */
+    public boolean contains(State state) {
+        for (Termable termable : terms) {  if (termable.getName().equals(state.name))
+                return true;
+        }
+        return false;
     }
 }

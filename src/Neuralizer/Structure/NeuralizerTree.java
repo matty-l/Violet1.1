@@ -20,7 +20,7 @@ public class NeuralizerTree {
      */
     public NeuralizerTree(ParserTreeNode root, Class type){
         base = new RawSyntaxTree(root,type);
-        assist = new TreeFlattenVisitor(base.getRoot());
+        assist = new TreeFlattenVisitor();
     }
 
     /** Returns a version of this tree that can be fed
@@ -28,7 +28,7 @@ public class NeuralizerTree {
      * @return a Matrix representing the tree
      */
     public Matrix flatten(){
-        return assist.getMatrixForm();
+        return assist.getMatrixForm(base.getRoot());
     }
 
 

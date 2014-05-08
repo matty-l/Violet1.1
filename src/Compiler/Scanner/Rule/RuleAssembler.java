@@ -101,7 +101,7 @@ public final class RuleAssembler {
             factoryRegexRule(">>=", LexerToken.TokenIds.INCREQ," <font color=\"#04A781\"> "),
             factoryRegexRule("-=", LexerToken.TokenIds.MINEQ," <font color=\"#04A781\"> "),
             factoryRegexRule("%=", LexerToken.TokenIds.MODEQ," <font color=\"#04A781\"> "),
-            factoryRegexRule("|=", LexerToken.TokenIds.OREQ," <font color=\"#04A781\"> "),
+            factoryRegexRule("\\|=", LexerToken.TokenIds.OREQ," <font color=\"#04A781\"> "),
             factoryRegexRule("\\+=", LexerToken.TokenIds.PLSEQ," <font color=\"#04A781\"> "),
             factoryRegexRule("\\*=", LexerToken.TokenIds.TIMEQ," <font color=\"#04A781\"> "),
             factoryRegexRule(">>>=", LexerToken.TokenIds.TRIPEQ," <font color=\"#04A781\"> "), //who uses this???
